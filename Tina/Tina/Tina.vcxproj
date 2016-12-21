@@ -19,10 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="vm.h" />
+    <ClCompile Include="alloc.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="vm.cpp" />
+    <ClInclude Include="c.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D7247821-0839-474E-8324-6D18A906DF7F}</ProjectGuid>
