@@ -70,6 +70,9 @@ static struct block *freeblocks;
 void *allocate(unsigned long n, unsigned a) {
 	struct block *ap;
 
+	assert(a < NELEMS(arena));
+	assert(n > 0);
+
 	ap = arena[a];
 	n = roundup(n, sizeof(union align));
 	// while循环不断执行，
@@ -77,11 +80,44 @@ void *allocate(unsigned long n, unsigned a) {
 	// 大多数调用allocate的情况，
 	// 这个块就是由allocate的第二个参数所指的分配区的指向的块
 	while (ap->avail + n > ap->limit) {
-
-		
+		if ((ap->next = freeblocks) != NULL) {
+			freeblocks = freeblocks->next;
+			ap = ap->next;
+		}
+		else {
+			// 新增的内存块，除了包括块的头、n个字节的需要分配的空间
+			// 还有10KB的空闲待分配的空间
+			unsigned m = sizeof(union header) + n + roundup(10 * 1024, sizeof(union align));
+			ap->next = (struct block*) malloc(m);
+			ap = ap->next;
+			if (ap == NULL) {
+				error("insufficient memory\n");
+				exit(1);
+			}
+			ap->limit = (char*)ap + m;
+		}
+		// 联合header保证ap->avail总是指向一个对齐后的地址
+		ap->avail = (char*)((union header*)ap + 1);
+		ap->next = NULL;
+		arena[a] = ap;
 	}
 	ap->avail += n;
 	return ap->avail - n;
+}
 
+void *newarray(unsigned long m, unsigned long n, unsigned a) {
+	return allocate(m*n, a);
+}
+
+// 一个空闲区的释放时，把它所有的内存块都加入空闲块列表中
+// 自己重新初始化成指向单元素列表，而该元素的内存块长度为0
+// 由于被释放的内存块已经通过其next指针连成了一个链
+// 所以只要通过简单的指针操作就可以把整个链中的的所有块都加入freeblock中
+void deallocate(unsigned a) {
+	assert(a < NELEMS(arena));
+	arena[a]->next = freeblocks;
+	freeblocks = first[a].next;
+	first[a].next = NULL;
+	arena[a] = &first[a];
 }
 #endif

@@ -1,3 +1,2 @@
-﻿  vm.cpp
-  Tina.vcxproj -> C:\Users\lin\Source\Repos\Tina\Tina\Debug\Tina.exe
-  Tina.vcxproj -> C:\Users\lin\Source\Repos\Tina\Tina\Debug\Tina.pdb (Full PDB)
+﻿MSVCRTD.lib(exe_main.obj) : error LNK2019: 无法解析的外部符号 _main，该符号在函数 "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ) 中被引用
+C:\Users\lin\Source\Repos\Tina\Tina\Debug\Tina.exe : fatal error LNK1120: 1 个无法解析的外部命令
