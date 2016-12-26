@@ -18,15 +18,29 @@
 
 #define NELEMS(a) ((int)(sizeof(a)/sizeof((a)[0])))
 
+
+// ¿Õ¼ä·ÖÅä
 extern void *allocate(unsigned long n, unsigned a);
-extern void deallocate(unsigned a);
 extern void *newarray(unsigned long m, unsigned long n, unsigned a);
+// ¿Õ¼äÊÍ·Å
+extern void deallocate(unsigned a);
 
-
+// ×Ö·û´®
 extern char *string(const char *str);
 extern char *stringn(const char *str, int len);
 extern char *stringd(long n);
 
 enum{PERM=0,FUNC,STMT};
+
+
+typedef struct _list *List;
+struct _list {
+	void *x;
+	List link;
+};
+
+extern List append(void *x, List plist);
+extern int length(List plist);
+extern void *ltov(List *plist, unsigned a);
 
 extern void error(const char*, ...);
