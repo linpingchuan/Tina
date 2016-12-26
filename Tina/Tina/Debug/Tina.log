@@ -1,2 +1,77 @@
-﻿MSVCRTD.lib(exe_main.obj) : error LNK2019: 无法解析的外部符号 _main，该符号在函数 "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ) 中被引用
-C:\Users\lin\Source\Repos\Tina\Tina\Debug\Tina.exe : fatal error LNK1120: 1 个无法解析的外部命令
+﻿  sym.cpp
+c:\users\lin\source\repos\tina\tina\tina\c.h(61): error C2380: “type”前的类型(构造函数有返回类型或是当前类型名称的非法重定义?)
+c:\users\lin\source\repos\tina\tina\tina\c.h(61): error C2208: “type”: 没有使用此类型进行定义的成员
+c:\users\lin\source\repos\tina\tina\tina\c.h(65): error C3646: “sym”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(65): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(71): error C3646: “x”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(71): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(79): error C2143: 语法错误: 缺少“;”(在“*”的前面)
+c:\users\lin\source\repos\tina\tina\tina\c.h(79): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(80): error C2371: “field”: 重定义；不同的基类型
+  c:\users\lin\source\repos\tina\tina\tina\c.h(79): note: 参见“field”的声明
+c:\users\lin\source\repos\tina\tina\tina\c.h(86): error C3646: “link”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(86): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(146): error C3646: “flist”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(146): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+  string.cpp
+c:\users\lin\source\repos\tina\tina\tina\c.h(61): error C2380: “type”前的类型(构造函数有返回类型或是当前类型名称的非法重定义?)
+c:\users\lin\source\repos\tina\tina\tina\c.h(61): error C2208: “type”: 没有使用此类型进行定义的成员
+c:\users\lin\source\repos\tina\tina\tina\c.h(65): error C3646: “sym”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(65): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(71): error C3646: “x”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(71): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(79): error C2143: 语法错误: 缺少“;”(在“*”的前面)
+c:\users\lin\source\repos\tina\tina\tina\c.h(79): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(80): error C2371: “field”: 重定义；不同的基类型
+  c:\users\lin\source\repos\tina\tina\tina\c.h(79): note: 参见“field”的声明
+c:\users\lin\source\repos\tina\tina\tina\c.h(86): error C3646: “link”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(86): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(146): error C3646: “flist”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(146): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+  list.cpp
+c:\users\lin\source\repos\tina\tina\tina\c.h(61): error C2380: “type”前的类型(构造函数有返回类型或是当前类型名称的非法重定义?)
+c:\users\lin\source\repos\tina\tina\tina\c.h(61): error C2208: “type”: 没有使用此类型进行定义的成员
+c:\users\lin\source\repos\tina\tina\tina\c.h(65): error C3646: “sym”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(65): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(71): error C3646: “x”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(71): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(79): error C2143: 语法错误: 缺少“;”(在“*”的前面)
+c:\users\lin\source\repos\tina\tina\tina\c.h(79): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(80): error C2371: “field”: 重定义；不同的基类型
+  c:\users\lin\source\repos\tina\tina\tina\c.h(79): note: 参见“field”的声明
+c:\users\lin\source\repos\tina\tina\tina\c.h(86): error C3646: “link”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(86): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(146): error C3646: “flist”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(146): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\list.cpp(42): error C2065: “arena”: 未声明的标识符
+  error.cpp
+c:\users\lin\source\repos\tina\tina\tina\c.h(61): error C2380: “type”前的类型(构造函数有返回类型或是当前类型名称的非法重定义?)
+c:\users\lin\source\repos\tina\tina\tina\c.h(61): error C2208: “type”: 没有使用此类型进行定义的成员
+c:\users\lin\source\repos\tina\tina\tina\c.h(65): error C3646: “sym”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(65): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(71): error C3646: “x”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(71): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(79): error C2143: 语法错误: 缺少“;”(在“*”的前面)
+c:\users\lin\source\repos\tina\tina\tina\c.h(79): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(80): error C2371: “field”: 重定义；不同的基类型
+  c:\users\lin\source\repos\tina\tina\tina\c.h(79): note: 参见“field”的声明
+c:\users\lin\source\repos\tina\tina\tina\c.h(86): error C3646: “link”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(86): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(146): error C3646: “flist”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(146): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+  alloc.cpp
+c:\users\lin\source\repos\tina\tina\tina\c.h(61): error C2380: “type”前的类型(构造函数有返回类型或是当前类型名称的非法重定义?)
+c:\users\lin\source\repos\tina\tina\tina\c.h(61): error C2208: “type”: 没有使用此类型进行定义的成员
+c:\users\lin\source\repos\tina\tina\tina\c.h(65): error C3646: “sym”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(65): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(71): error C3646: “x”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(71): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(79): error C2143: 语法错误: 缺少“;”(在“*”的前面)
+c:\users\lin\source\repos\tina\tina\tina\c.h(79): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(80): error C2371: “field”: 重定义；不同的基类型
+  c:\users\lin\source\repos\tina\tina\tina\c.h(79): note: 参见“field”的声明
+c:\users\lin\source\repos\tina\tina\tina\c.h(86): error C3646: “link”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(86): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+c:\users\lin\source\repos\tina\tina\tina\c.h(146): error C3646: “flist”: 未知重写说明符
+c:\users\lin\source\repos\tina\tina\tina\c.h(146): error C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+  正在生成代码...

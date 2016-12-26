@@ -21,7 +21,9 @@
   <ItemGroup>
     <ClCompile Include="alloc.cpp" />
     <ClCompile Include="error.cpp" />
+    <ClCompile Include="list.cpp" />
     <ClCompile Include="string.cpp" />
+    <ClCompile Include="sym.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="c.h" />
