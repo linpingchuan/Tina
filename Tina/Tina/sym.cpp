@@ -57,3 +57,7 @@ Table table(Table tp, int level) {
 		_new->all = tp->all;
 	return _new;
 }
+
+void foreach(Table tp, int lev, void(*apply)(Symbol, void *), void *cl) {
+
+}
