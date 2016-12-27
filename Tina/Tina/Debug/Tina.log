@@ -1,11 +1,11 @@
-﻿  alloc.cpp
+﻿  sym.cpp
   正在生成代码...
   正在编译...
-  sym.cpp
   string.cpp
   main.cpp
   list.cpp
   error.cpp
+  alloc.cpp
   正在生成代码...
   Tina.vcxproj -> C:\Users\lin\Source\Repos\Tina\Tina\Debug\Tina.exe
   Tina.vcxproj -> C:\Users\lin\Source\Repos\Tina\Tina\Debug\Tina.pdb (Full PDB)

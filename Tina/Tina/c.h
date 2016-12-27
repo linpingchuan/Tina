@@ -19,32 +19,10 @@
 
 #define NELEMS(a) ((int)(sizeof(a)/sizeof((a)[0])))
 
-
-// 空间分配
-extern void *allocate(unsigned long n, unsigned a);
-extern void *newarray(unsigned long m, unsigned long n, unsigned a);
-// 空间释放
-extern void deallocate(unsigned a);
-
-// 字符串
-extern char *string(const char *str);
-extern char *stringn(const char *str, int len);
-extern char *stringd(long n);
-
-enum{PERM=0,FUNC,STMT};
-
+// 指针循环列表
 typedef struct _list *List;
-struct _list {
-	void *x;
-	List link;
-};
-
-extern List append(void *x, List plist);
-extern int length(List plist);
-extern void *ltov(List *plist, unsigned a);
-
 // 常量、标号、全局变量、参数或局部变量
-enum{CONSTANT=1,LABELS,GLOBAL,PARAM,LOCAL};
+enum { CONSTANTS = 1, LABELS, GLOBAL, PARAM, LOCAL };
 // 精确指明了符号在何处定义
 typedef struct coord {
 	// file域指明了包含该定义的文件的名字
@@ -65,6 +43,36 @@ typedef struct type *Type;
 // 符号
 typedef struct symbol *Symbol;
 typedef struct field *Field;
+
+typedef struct _table *Table;
+
+// 空间分配
+extern void *allocate(unsigned long n, unsigned a);
+extern void *newarray(unsigned long m, unsigned long n, unsigned a);
+// 空间释放
+extern void deallocate(unsigned a);
+
+// 字符串
+extern char *string(const char *str);
+extern char *stringn(const char *str, int len);
+extern char *stringd(long n);
+
+
+enum{PERM=0,FUNC,STMT};
+
+
+struct _list {
+	void *x;
+	List link;
+};
+
+extern List append(void *x, List plist);
+extern int length(List plist);
+extern void *ltov(List *plist, unsigned a);
+
+extern Table table(Table tp, int level);
+// 
+
 
 /**
 * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
@@ -138,7 +146,24 @@ struct symbol {
 
 	Type type;
 	float ref;
+	union {
 
+	}u;
+	
 };
+
+// 符号表子集
+extern Table constants;
+// 存放声明为extern的标识符,用于警告外部标识符声明冲突
+extern Table externals;
+// identifiers表的一部分，保存具有文件作用域的标识符
+extern Table globals;
+// 保存一般标识符
+extern Table identifiers;
+// 保存编译器定义的内部标号
+extern Table labels;
+// 存放类型标记
+extern Table types;
+
 extern void error(const char*, ...);
 #endif
