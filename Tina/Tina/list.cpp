@@ -37,7 +37,7 @@ int length(List plist) {
 
 // 把list中的n个元素复制到a所指的分配区中以空元素结尾的指针数组
 // 释放列表结构并返回该数组
-void *ltov(List *plist, unsigned a) {
+void *ltov(List *plist, unsigned arena) {
 	int i = 0;
 	void **_array =(void **) newarray(length(*plist) + 1, sizeof _array[0], arena);
 

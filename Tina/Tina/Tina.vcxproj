@@ -22,6 +22,7 @@
     <ClCompile Include="alloc.cpp" />
     <ClCompile Include="error.cpp" />
     <ClCompile Include="list.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="string.cpp" />
     <ClCompile Include="sym.cpp" />
   </ItemGroup>
