@@ -70,10 +70,12 @@ extern List append(void *x, List plist);
 extern int length(List plist);
 extern void *ltov(List *plist, unsigned a);
 
+// 符号表的表示
 extern Table table(Table tp, int level);
-// 
-
-
+extern void foreach(Table tp, int level, void(*apply)(Symbol, void *), void *cl);
+// 作用域的改变
+extern void enterscope();
+extern void exitscope();
 /**
 * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
 */
@@ -164,6 +166,10 @@ extern Table identifiers;
 extern Table labels;
 // 存放类型标记
 extern Table types;
+// src中保存的信息使得apply引发的诊断程序能够指向正确的源程序坐标
+extern Coordinate src;
+// 全局变量level的值和对应的表一起表示了一个作用域
+extern int level;
 
 extern void error(const char*, ...);
 #endif

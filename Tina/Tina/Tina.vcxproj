@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="alloc.cpp" />
     <ClCompile Include="error.cpp" />
+    <ClCompile Include="lex.cpp" />
     <ClCompile Include="list.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="string.cpp" />
