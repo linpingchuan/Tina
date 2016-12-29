@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
+#include "config.h"
 
 // 宏NEW返回一个指向尚未初始化的空间指针
 #define NEW(p,a) ((p)=allocate(sizeof*(p),(a)))
@@ -19,8 +20,16 @@
 
 #define NELEMS(a) ((int)(sizeof(a)/sizeof((a)[0])))
 
+typedef struct node *Node;
 // 指针循环列表
 typedef struct _list *List;
+typedef struct type *Type;
+// 符号
+typedef struct symbol *Symbol;
+typedef struct field *Field;
+
+typedef struct _table *Table;
+
 // 常量、标号、全局变量、参数或局部变量
 enum { CONSTANTS = 1, LABELS, GLOBAL, PARAM, LOCAL };
 // 精确指明了符号在何处定义
@@ -33,18 +42,51 @@ typedef struct coord {
 }Coordinate;
 
 typedef struct {
+	unsigned listed : 1;
+	unsigned registered : 1;
+	unsigned emitted : 1;
+	unsigned copy : 1;
+	unsigned equatable : 1;
+	unsigned spills : 1;
+	unsigned mayrecalc : 1;
+	void *state;
+	short inst;
+	Node kids[3];
+	Node prev, next;
+	short argno;
+}Xnode;
+
+typedef struct {
+	Symbol vbl;
+	short set;
+	short number;
+	unsigned mask;
+}*Regnode;
+
+typedef struct {
+	char *name;
+	unsigned int eaddr;
+	int offset;
+	Node lastuse;
+	int usecount;
+	Regnode regnode;
+	Symbol *wildcard;
+}Xsymbol;
+
+typedef struct {
 	unsigned printed : 1;
 	unsigned marked;
 	unsigned short typeno;
 	void *xt;
 }Xtype;
 
-typedef struct type *Type;
-// 符号
-typedef struct symbol *Symbol;
-typedef struct field *Field;
-
-typedef struct _table *Table;
+typedef union value {
+	long i;
+	unsigned long u;
+	long double d;
+	void *p;
+	void(*g)(void);
+}Value;
 
 // 空间分配
 extern void *allocate(unsigned long n, unsigned a);
@@ -60,7 +102,14 @@ extern char *stringd(long n);
 
 enum{PERM=0,FUNC,STMT};
 
-
+struct node {
+	short op;
+	short count;
+	Symbol syms[3];
+	Node kids[2];
+	Node link;
+	Xnode x;
+};
 struct _list {
 	void *x;
 	List link;
@@ -76,6 +125,9 @@ extern void foreach(Table tp, int level, void(*apply)(Symbol, void *), void *cl)
 // 作用域的改变
 extern void enterscope();
 extern void exitscope();
+
+extern Symbol install(char *name, Table *tpp, int level, int arena);
+extern Symbol lookup(const char*name, Table tp);
 /**
 * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
 */
@@ -149,9 +201,40 @@ struct symbol {
 	Type type;
 	float ref;
 	union {
-
+		struct {
+			int label;
+			Symbol equatedto;
+		}l;
+		struct {
+			unsigned cfields : 1;
+			unsigned vfields : 1;
+			Table ftab;
+			Field flist;
+		}s;
+		int value;
+		Symbol *idlist;
+		struct {
+			Value min, max;
+		}limits;
+		struct {
+			Value v;
+			Symbol loc;
+		}c;
+		struct {
+			Coordinate pt;
+			int label;
+			int ncalls;
+			Symbol *callee;
+		}f;
+		int seg;
+		Symbol alias;
+		struct {
+			Node cse;
+			int replace;
+			Symbol next;
+		}t;
 	}u;
-	
+	Xsymbol x;
 };
 
 // 符号表子集
@@ -170,6 +253,7 @@ extern Table types;
 extern Coordinate src;
 // 全局变量level的值和对应的表一起表示了一个作用域
 extern int level;
-
+// rmtypes将其类型缓冲中删除
+extern void rmtypes(int);
 extern void error(const char*, ...);
 #endif

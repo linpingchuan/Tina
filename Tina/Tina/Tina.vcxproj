@@ -26,9 +26,11 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="string.cpp" />
     <ClCompile Include="sym.cpp" />
+    <ClCompile Include="types.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="c.h" />
+    <ClInclude Include="config.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D7247821-0839-474E-8324-6D18A906DF7F}</ProjectGuid>

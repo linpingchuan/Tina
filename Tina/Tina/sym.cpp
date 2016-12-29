@@ -4,7 +4,10 @@
 static char rcsid[] = "$Id$";
 
 #define equalp(x) v.x== p->sym.u.c.v.x
-
+struct entry {
+	struct symbol sym;
+	struct entry *link;
+};
 struct _table {
 	// level域的值指明作用域
 	int level;
@@ -18,10 +21,7 @@ struct _table {
 	// 则根据关键字计算哈希函数值，找到相应的哈希链，
 	// 然后通过遍历该链找到相应的符号；
 	// 如果未发现该符号，则通过previous域在外层作用域的入口中进行查找
-	struct entry {
-		struct symbol sym;
-		struct entry *link;
-	}*buckets[256];
+	struct entry *buckets[256];
 	// 在每个表结构中，all域指向由当前及其外层作用域中所有符号组成的列表的头
 	// 该列表是通过symbol的up域连接起来的
 	Symbol all;
@@ -101,12 +101,46 @@ void enterscope() {
 /**
  * 退出作用域，level将递减，相应的identifiers和types表也随着撤销
  */
-void exitscoope() {
+void exitscope() {
+	// rmtypes将从其类型缓冲中删除
+	rmtypes(level);
 	if (types->level == level)
 		types = types->previous;
 	if (identifiers->level == level) {
-
+		
 		identifiers = identifiers->previous;
 	}
 	--level;
+}
+
+/**
+ * install函数为给定的name分配一个符号，
+ * 并把该符号加入与给定作用域层数相对应的表中。
+ * 如果需要，还将建立一个新表。
+ * 该函数返回一个指向符号的指针。
+ * name存放了字符串，根据其地址可以计算它的哈希值。
+ * tpp是一个指向表的指针。
+ * 如果*tpp指向某作用域的表,如identifiers，
+ * 并且目前没有与参数level给定的作用域相对应的表.
+ * 则install将先为参数level给定的作用域分配一个表。
+ * 并更新*tpp;
+ * 然后 install分配一个入口，将该项清零，
+ * 最后初始化符号的某些域，并把该入口加入哈希链表中。
+ */
+Symbol install(char *name, Table *tpp, int level, int arena) {
+	Table tp = *tpp;
+	struct entry *p;
+	unsigned h = (unsigned)name*(HASHSIZE - 1);
+	assert(level == 0 || level >= tp->level);
+
+	if (level > 0 && tp->level < level)
+		tp = *tpp = table(tp, level);
+	p = (struct entry*)memset(allocate(sizeof *(p),arena), 0, sizeof *(p));
+	p->sym.name = name;
+	p->sym.scope = level;
+	p->sym.up = tp->all;
+	tp->all = &p->sym;
+	p->link = tp->buckets[h];
+	tp->buckets[h] = p;
+	return &p->sym;
 }

@@ -36,9 +36,15 @@
     <ClCompile Include="lex.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="types.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="c.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="config.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
