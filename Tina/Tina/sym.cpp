@@ -49,7 +49,7 @@ List loci, symbols;
 /**
  * 内层嵌套作用域的表都是动态创建的，并且与相应外层的表进行链接。
  * 函数被编译完成后，所有动态分配的表都被释放，因此，动态表是在FUNC分配区中进行分配的
- * 
+ *
  */
 Table table(Table tp, int level) {
 	Table _new;
@@ -66,7 +66,7 @@ Table table(Table tp, int level) {
  * 并为符号调用apply函数。
  * cl是一个指针，它指向与调用相关的数据closure，该数据由foreach的调用者提供，
  * 如果有需要，这些数据将传递apply函数以便其访问。
- * 
+ *
  */
 void foreach(Table tp, int lev, void(*apply)(Symbol, void *), void *cl) {
 	assert(tp);
@@ -75,7 +75,7 @@ void foreach(Table tp, int lev, void(*apply)(Symbol, void *), void *cl) {
 	if (tp&&tp->level == lev) {
 		Symbol p;
 		Coordinate sav;
-		sav=src;
+		sav = src;
 		/**
 		* for循环遍历表的all链表，
 		* 直到链表或遇到较小层数作用域中的符号.
@@ -107,7 +107,7 @@ void exitscope() {
 	if (types->level == level)
 		types = types->previous;
 	if (identifiers->level == level) {
-		
+
 		identifiers = identifiers->previous;
 	}
 	--level;
@@ -126,6 +126,10 @@ void exitscope() {
  * 并更新*tpp;
  * 然后 install分配一个入口，将该项清零，
  * 最后初始化符号的某些域，并把该入口加入哈希链表中。
+ * level必须为0，或不小于该表的作用域层数。
+ * 如果level为0，则表示name应该建立在*tpp表示的表格中。
+ * install接受一个指明相应分配区的参数，如果有函数原型，
+ * 则使其中的符号可以永久保存，即使它们是在内层作用域中声明的。
  */
 Symbol install(char *name, Table *tpp, int level, int arena) {
 	Table tp = *tpp;
@@ -135,7 +139,7 @@ Symbol install(char *name, Table *tpp, int level, int arena) {
 
 	if (level > 0 && tp->level < level)
 		tp = *tpp = table(tp, level);
-	p = (struct entry*)memset(allocate(sizeof *(p),arena), 0, sizeof *(p));
+	p = (struct entry*)memset(allocate(sizeof *(p), arena), 0, sizeof *(p));
 	p->sym.name = name;
 	p->sym.scope = level;
 	p->sym.up = tp->all;
@@ -143,4 +147,21 @@ Symbol install(char *name, Table *tpp, int level, int arena) {
 	p->link = tp->buckets[h];
 	tp->buckets[h] = p;
 	return &p->sym;
+}
+/**
+ * lookup函数实现在表中查找一个名字，查找的关键字是符号的name域。
+ * 如果找到了，该函数将返回一个指向符号的指针，否则返回空指针。
+ * 在代码中，内层循环扫描哈希链，外层循环扫描外层作用域。
+ * 字符串模块保证当且仅当两个字符串完全相同是，
+ * 它们才是同一个副本，所以字符串的比较非常简单。
+ */
+Symbol lookup(char *name, Table tp) {
+	struct entry *p;
+	unsigned h = (unsigned)name&(HASHSIZE - 1);
+	do
+		for (p = tp->buckets[h];p;p = p->link)
+			if (name == p->sym.name)
+				return &p->sym;
+	while ((tp = tp->previous) != NULL);
+	return NULL;
 }
