@@ -165,3 +165,45 @@ Symbol lookup(char *name, Table tp) {
 	while ((tp = tp->previous) != NULL);
 	return NULL;
 }
+
+/**
+ * 符号表模块还提供了管理标号和常量的函数。
+ * 这些管理函数与lookup和install 相似，但是不涉及作用域管理。
+ * 查找标号和常量时，如果有必要，就会建立这些标号和常量，因此查找总会成功。
+ * 查找的关键字是联合u中标号和常量特有的域。
+ * 编译器产生标号和源程序中的标号的内部表示都采取整数。
+ * 函数genlabel通过累加计数器产生一个整数.
+ * genlabel也可以用于产生唯一的，匿名的名字，如产生一个临时变量的名字。
+ */
+int genlabel(int n) {
+	static int label = 1;
+	label += n;
+	return label - n;
+}
+/**
+ * 源程序中的每个标号都有相应的一个内部标号，
+ * 这些内部标号和编译器产生的其他标号都保存在label表中。
+ * 对于每个函数都会建立一个这样的表，并有findlabel函数进行管理。
+ * findlabel函数的输入参数是一个标号数，并返回该标号对应的符号。
+ * 如果需要，则会建立该符号，进行初始化并通知编译后端。
+ * generated是一位二进制位域<symbol flags>，表示一个产生的符号.
+ * 对于产生的这些符号名字，某些编译后端可以利用特殊的格式以避免表在连接上的混乱。
+ */
+Symbol findlabel(int lab) {
+	struct entry *p;
+	unsigned h = lab&(HASHSIZE - 1);
+	for (p = labels->buckets[h]; p; p = p->link)
+		if (lab == p->sym.u.l.label)
+			return &p->sym;
+	p = (struct entry *)memset(allocate(sizeof*(p), FUNC), 0, sizeof*(p));
+	p->sym.name = stringd(lab);
+	p->sym.scope = LABELS;
+	p->sym.up = labels->all;
+	labels->all = &p->sym;
+	p->link = labels->buckets[h];
+	labels->buckets[h] = p;
+	p->sym.generated = 1;
+	p->sym.u.l.label = lab;
+	(*IR->defsymbol)(&p->sym);
+	return &p->sym;
+}

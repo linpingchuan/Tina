@@ -57,6 +57,21 @@ typedef struct {
 }Xnode;
 
 typedef struct {
+	unsigned printed : 1;
+	unsigned marked;
+	unsigned short typeno;
+	void *xt;
+}Xtype;
+typedef struct metrics {
+	unsigned char size, align, outoflines;
+}Metrics;
+
+typedef struct interface {
+	
+	void(*defsymbol)(Symbol);
+}Interface;
+
+typedef struct {
 	Symbol vbl;
 	short set;
 	short number;
@@ -72,13 +87,6 @@ typedef struct {
 	Regnode regnode;
 	Symbol *wildcard;
 }Xsymbol;
-
-typedef struct {
-	unsigned printed : 1;
-	unsigned marked;
-	unsigned short typeno;
-	void *xt;
-}Xtype;
 
 typedef union value {
 	long i;
@@ -118,16 +126,22 @@ struct _list {
 extern List append(void *x, List plist);
 extern int length(List plist);
 extern void *ltov(List *plist, unsigned a);
-
+// rmtypes将其类型缓冲中删除
+extern void rmtypes(int);
+extern void error(const char*, ...);
 // 符号表的表示
 extern Table table(Table tp, int level);
 extern void foreach(Table tp, int level, void(*apply)(Symbol, void *), void *cl);
 // 作用域的改变
 extern void enterscope();
 extern void exitscope();
-
+// 查找个建立标识符
 extern Symbol install(char *name, Table *tpp, int level, int arena);
 extern Symbol lookup(const char*name, Table tp);
+// 标号
+extern int genlabel(int);
+extern Symbol findlabel(int);
+
 /**
 * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
 */
@@ -201,6 +215,10 @@ struct symbol {
 	Type type;
 	float ref;
 	union {
+		/**
+		 * 如果两个或更多个内部标号指向相同位置，
+		 * 则这些标号的equatedto域指向其中一个标号。
+		 */
 		struct {
 			int label;
 			Symbol equatedto;
@@ -253,7 +271,6 @@ extern Table types;
 extern Coordinate src;
 // 全局变量level的值和对应的表一起表示了一个作用域
 extern int level;
-// rmtypes将其类型缓冲中删除
-extern void rmtypes(int);
-extern void error(const char*, ...);
+// 编译器后端
+extern Interface *IR;
 #endif
