@@ -45,6 +45,12 @@ Table labels;
 
 int level = GLOBAL;
 static int tempid;
+/**
+ * loci和symbols分别保存了指向Coordinate和Symbol的指针。
+ * symbols表中每个入口是一个链表的尾，
+ * 该链表由在loci对应的源代码位置上的可见的符号组成。
+ * 从入口的符号出发，通过up域可以访问所有在该点可见的符号。
+ */
 List loci, symbols;
 /**
  * 内层嵌套作用域的表都是动态创建的，并且与相应外层的表进行链接。
@@ -337,4 +343,72 @@ Symbol genident(int scls, Type ty, int lev) {
 	if (lev == GLOBAL)
 		(*IR->defsymbol)(p);
 	return p;
+}
+/**
+ * 临时变量是另外一类产生的变量，
+ * 它们都具有temporary标志；
+ * 
+ */
+Symbol temporary(int scls, Type ty, int lev) {
+	Symbol p;
+	p = (Symbol)memset(allocate(sizeof*(p), FUNC), 0, sizeof*(p));
+	p->name = stringd(++tempid);
+	p->scope = level < LOCAL ? LOCAL : level;
+	p->sclass = scls;
+	p->type = ty;
+	p->temporary = 1;
+	p->generated = 1;
+	return p;
+}
+Symbol temporary(int scls, Type ty) {
+	Symbol p;
+	p = (Symbol)memset(allocate(sizeof*(p), FUNC), 0, sizeof*(p));
+	p->name = stringd(++tempid);
+	p->scope = level < LOCAL ? LOCAL : level;
+	p->sclass = scls;
+	p->type = ty;
+	p->temporary = 1;
+	p->generated = 1;
+	return p;
+}
+/**
+ *编译后端有时也需要临时变量，
+ * 比如为了腾空寄存器，后端由于不知道类型系统，
+ * 所以不能直接调用temporary函数。
+ * newtemp接受一个类型后端，
+ * 通过调用btot将该后缀映射为相应的类型，
+ * 再利用该类型调用temporary.
+ * 调用newtemp发生在代码生成的时候，
+ * 如果像前端的临时变量那样进行通知，
+ * 则为时已晚。
+ * 因此，newtemp调用local来通告他们。
+ * 标志defined在通知完后端之后被置成1.
+ */
+Symbol newtemp(int sclass, int tc, int size) {
+	Symbol p = temporary(sclass, btot(tc, size));
+	(*IR->local)(p);
+	p->defined = 1;
+	return p;
+}
+/**
+ * -x选项使lcc把每个符号use域置成一个指向Coordinate的指针列表,
+ * 表示该符号的引用情况。
+ */
+void use(Symbol p, Coordinate src) {
+	Coordinate *cp;
+	cp = (Coordinate *)allocate(sizeof*(cp), PERM);
+	*cp = src;
+	p->uses = append(cp, p->uses);
+}
+
+Symbol allsymbols(Table tp) {
+	return tp->all;
+}
+/**
+ * locus函数把tp->all和cp加入symbols和loci中。
+ * tp->all指向最近加入*tp表的符号，即当前可见符号列表。
+ */
+void locus(Table tp, Coordinate *cp) {
+	loci = append(cp, loci);
+	symbols = append(allsymbols(tp), symbols);
 }

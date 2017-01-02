@@ -75,6 +75,7 @@ typedef struct metrics {
 
 typedef struct interface {
 	void(*defsymbol)(Symbol);
+	void(*local)(Symbol);
 }Interface;
 
 typedef struct {
@@ -160,6 +161,14 @@ extern Symbol constant(Type ty, Value v);
 extern char *vtoa(Type, Value);
 extern Symbol intconst(int n);
 extern Symbol genident(int, Type, int);
+extern Symbol temporary(int, Type, int);
+extern Symbol temporary(int, Type);
+extern Symbol newtemp(int, int, int);
+// 为调试器生成标识符和符号表信息的交叉引用列表
+extern void use(Symbol, Coordinate);
+extern void locus(Table, Coordinate*);
+
+extern Type btot(int, int);
 
 extern int eqtype(Type, Type, int);
 /**

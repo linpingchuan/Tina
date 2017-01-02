@@ -40,3 +40,9 @@ int eqtype(Type ty1, Type ty2, int ret) {
 	//assert(0);
 	return 0;
 }
+
+Type btot(int op, int size) {
+#define xx(ty) if(size==(ty)->size) return ty;
+#undef xx
+	return 0;
+}
