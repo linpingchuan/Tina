@@ -1,7 +1,22 @@
 #include "c.h"
 #include <float.h>
 
+/**
+ * 类型检查的基本操作之一是判断两个类型是否等价。
+ * 如果任意类型只有一份副本，等价测试就可以简化。
+ * 任意字符串只保留一份副本，串的比较就很简单。
+ */
+
+
 static char rcsid[] = "$Id$";
+
+// type管理类型表typetable
+static struct entry {
+	struct _type type;
+	struct entry *link;
+} *typetable[128];
+
+
 
 Type chartype;
 Type doubletype;
@@ -45,4 +60,23 @@ Type btot(int op, int size) {
 #define xx(ty) if(size==(ty)->size) return ty;
 #undef xx
 	return 0;
+}
+
+static Type type(int op, Type ty, int size, int align, void *sym) {
+	unsigned h = (op ^ ((unsigned long)ty >> 3))&(NELEMS(typetable) - 1);
+	struct entry *tn;
+	if (op != FUNCTION && (op != ARRAY || size > 0))
+		for (tn = typetable[h]; tn; tn = tn->link)
+			if (tn->type.op == op&&tn->type.type == ty
+				&&tn->type.size == size&&tn->type.align == align
+				&&tn->type.u.sym == sym)
+				return &tn->type;
+	tn =(struct entry*) memset(allocate(sizeof*(tn), PERM), 0, sizeof*(tn));
+	tn->type.op = op;
+	tn->type.type = ty;
+	tn->type.size = size;
+	tn->type.u.sym =(Symbol) sym;
+	tn->link = typetable[h];
+	typetable[h] = tn;
+	return &tn->type;
 }

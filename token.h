@@ -1,5 +1,18 @@
 /**
  * xx(symbol,value,prec,op,optree,kind,string)
+ * 操作符CHAR,INT,UNSIGNED,SHORT,LONG和ENUM定义了整数类型；
+ * FLOAT,DOUBLE定义了浮点类型。这些类型都可以看做算术类型。
+ * 除ENUM类型外，这些类型都没有操作数。
+ * ENUM类型的操作数是与其兼容的整数类型，即枚举标识符的类型。
+ * 对于lcc而言，枚举标识符的类型总是整型(int).
+ * 操作符ARRAY,STRUCT,UNION表示聚合类型。
+ * STRUCT和UNION没有操作数，它们的域存放在结构或联合的附加符号表入口中。
+ * 它们的域存放在结构或联合标记的附加符号表入口中。
+ * ARRAY的操作数是数据元素类型(element type).
+ * POINTER和FUNCTION分别定义指针类型(pointer type)和返回类型(return type).
+ * 操作类型CONST和VOLATILE说明限定类型(qualified type),它们的操作数就是类型的未限定形式。
+ * CONST加上VOLATILE也是一个类型操作符，它说明一个既是const又是volatile的类型。
+ * VOID操作符表示void类型，没有操作数。
  */
 #ifndef TOKEN_H
 #define TOKEN_H
