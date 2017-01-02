@@ -82,7 +82,7 @@ void foreach(Table tp, int lev, void(*apply)(Symbol, void *), void *cl) {
 		* 从严格意义上来说，all并不是必须的，因为foreach可以遍历哈希表.
 		* 按照与哈希地址无关的顺序为每个符号调用apply，会使产生的代码的顺序与机器无关
 		*/
-		for (p = tp->all; p&&p->scope == lev; p = p->up) {
+		for (p = tp->all;p&&p->scope == lev;p = p->up) {
 			src = p->src;
 			(*apply)(p, cl);
 		}
@@ -159,7 +159,7 @@ Symbol lookup(char *name, Table tp) {
 	struct entry *p;
 	unsigned h = (unsigned)name&(HASHSIZE - 1);
 	do
-		for (p = tp->buckets[h]; p; p = p->link)
+		for (p = tp->buckets[h];p;p = p->link)
 			if (name == p->sym.name)
 				return &p->sym;
 	while ((tp = tp->previous) != NULL);
@@ -218,81 +218,55 @@ Symbol findlabel(int lab) {
 Symbol constant(Type ty, Value v) {
 	struct entry *p;
 	unsigned h = v.u&(HASHSIZE - 1);
-	static union {
+	static union { 
 		int x;
 		// 字节存储次序
 		char endian;
-	}little = { 1 };
-	
-	ty = unqual(ty);
-	/**
-	 * 如果v出现在表中，则返回指向其符号的指针；
-	 * 否则，在表中新增一个符号并初始化。
-	 */
-	for (p = constants->buckets[h]; p; p = p->link)
-		if (eqtype(ty, p->sym.type, 1))
-			switch (ty->op) {
-			case INT:
-				if (equalp(i))
-					return &p->sym;
-				break;
-			case UNSIGNED:
-				if (equalp(u))
-					return &p->sym;
-				break;
-			case FLOAT:
-				if (v.d == 0.0) {
-					float z1 = v.d, z2 = p->sym.u.c.v.d;
-					char *b1 = (char *)&z1, *b2 = (char *)&z2;
-					if (z1 == z2
-						&& (!little.endian&&b1[0] == b2[0]
-							|| little.endian&&b1[sizeof(z1) - 1] == b2[sizeof(z2) - 1]))
-						return &p->sym;
-				}
-				else if (equalp(d))
-					return &p->sym;
-				break;
-			case FUNCTION:
-				if (equalp(g))
-					return &p->sym;
-				break;
-			case ARRAY:
-			case POINTER:
-				if (equalp(p))
-					return &p->sym;
-				break;
-			default:
-				assert(0);
-			}
+	}little = {1};
 
+	ty = unqual(ty);
+	for (p = constants->buckets[h]; p; p = p->link)
+		if(eqtype(ty,p->sym.type,1))
+			switch (ty->op) {
+				switch (ty->op) {
+				case INT:
+					if (equalp(i))
+						return &p->sym;
+					break;
+				case UNSIGNED:
+					if (equalp(u))
+						return &p->sym;
+					break;
+				case FLOAT:
+					if (v.d == 0.0) {
+						float z1 = v.d, z2 = p->sym.u.c.v.d;
+						char *b1 = (char *)&z1, *b2 = (char *)&z2;
+						if (z1 == z2
+							&& (!little.endian&&b1[0] == b2[0]
+								|| little.endian&&b1[sizeof(z1) - 1] == b2[sizeof(z2) - 1]))
+							return &p->sym;
+					}
+					else if (equalp(d))
+						return &p->sym;
+					break;
+				case FUNCTION:
+					if (equalp(g))
+						return &p->sym;
+					break;
+				case ARRAY:
+				case POINTER:
+					if (equalp(p))
+						return &p->sym;
+					break;
+				default:
+					assert(0);
+				}
+			}
 	p = (struct entry *)memset(allocate(sizeof*(p), FUNC), 0, sizeof*(p));
-	// name域存放了vtoa函数返回的常量的字符串的表示。
 	p->sym.name = vtoa(ty, v);
-	p->sym.scope = CONSTANTS;
-	p->sym.type = ty;
-	p->sym.sclass = STATIC;
-	p->sym.u.c.v = v;
-	p->link = constants->buckets[h];
-	p->sym.up = constants->all;
-	constants->all = &p->sym;
-	constants->buckets[h] = p;
-	/**
-	 * constant调用defsymbol，通知编译后端这些常量可以出现在dag（无环有向图中）
-	 * 对于基本类型，如整型和浮点类型，只有对addressed标志进行了测试，lcc完成这些配置后才出现dag中。
-	 */
-	if (ty->u.sym && !ty->u.sym->addressed)
-		(*IR->defsymbol)(&p->sym);
-	p->sym.defined = 1;
 	return &p->sym;
 }
-/**
- * vtoa返回的值只对整型和指向常量的指针有。
- * 对于其他类型，返回的字符串并不能可靠地描述对应的数值。
- * 常量的查找是基于它们实际的值，
- * 而不是它们的字符串表示，因为有些浮点数不能直接自然地表示成字符串。
- * 例如，常量表达式(double)(float)0.3可以将0.3截尾成一个与机器相关的值
- * 这种效果就不能用有效的字符串表示出来。
- */
+
 char *vtoa(Type ty, Value v) {
 	ty = unqual(ty);
 	switch (ty->op) {
@@ -301,40 +275,11 @@ char *vtoa(Type ty, Value v) {
 	case FLOAT:return stringf("%g", (double)v.d);
 	case ARRAY:
 		if (ty->type == chartype || ty->type == signedchar || ty->type == unsignedchar)
-			return (char *)v.p;
+			return v.p;
 		return stringf("%p", v.p);
 	case POINTER:return stringf("%p", v.p);
 	case FUNCTION:return stringf("%p", v.g);
 	}
 	assert(0);
 	return NULL;
-}
-/**
- * 在编译前端和后端中都有大量的整形常量。
- * intconst封装了建立和通知整形常量的功能
- */
-Symbol intconst(int n) {
-	Value v;
-	v.i = n;
-	return constant(inttype, v);
-}
-/**
- * 编译的前端会为各种目的产生局部变量。
- * 例如，可以产生静态的变量，用于保存超出一行的变量（如字符串）和switch语句的跳转表等，
- * 也可以产生一些局部变量用于函数传递和返回结构，以及保存条件表达式的结果和switch语句的测试值。
- * genident根据给定的类型、存储类别和作用域，产生一个标识符并初始化。
- * 其中name是由数字组成的字符串，generated标志被设置为1.
- * 参数和局部变量在其他地方通知编译后端，该数据结构连接前端和某个具体的后端
- */
-Symbol genident(int scls, Type ty, int lev) {
-	Symbol p;
-	p = (Symbol)memset(allocate(sizeof*(p), lev >= LOCAL ? FUNC : PERM), 0, sizeof*(p));
-	p->name = stringd(genlabel(1));
-	p->scope = lev;
-	p->sclass = scls;
-	p->type = ty;
-	p->generated = 1;
-	if (lev == GLOBAL)
-		(*IR->defsymbol)(p);
-	return p;
 }

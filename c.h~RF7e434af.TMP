@@ -21,16 +21,12 @@
 #define NELEMS(a) ((int)(sizeof(a)/sizeof((a)[0])))
 
 #define isqual(t) ((t)->op >= CONST)
-/**
- * unqual函数类型返回类型(Type)的未限定(unqualified)形式。
- * 即去掉类型中的const和volatile.
- */
 #define unqual(t) (isqual(t)?(t)->type:(t))
 
 typedef struct node *Node;
 // 指针循环列表
 typedef struct _list *List;
-typedef struct _type *Type;
+typedef struct type *Type;
 // 符号
 typedef struct symbol *Symbol;
 typedef struct field *Field;
@@ -74,6 +70,7 @@ typedef struct metrics {
 }Metrics;
 
 typedef struct interface {
+	
 	void(*defsymbol)(Symbol);
 }Interface;
 
@@ -120,7 +117,7 @@ extern void deallocate(unsigned a);
 extern char *string(const char *str);
 extern char *stringn(const char *str, int len);
 extern char *stringd(long n);
-extern char *stringf(const char *, ...);
+
 
 enum{PERM=0,FUNC,STMT};
 
@@ -157,11 +154,6 @@ extern int genlabel(int);
 extern Symbol findlabel(int);
 // 常量
 extern Symbol constant(Type ty, Value v);
-extern char *vtoa(Type, Value);
-extern Symbol intconst(int n);
-extern Symbol genident(int, Type, int);
-
-extern int eqtype(Type, Type, int);
 /**
 * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
 */
@@ -280,8 +272,6 @@ struct symbol {
 	Xsymbol x;
 };
 
-#include "token.h"
-
 // 符号表子集
 extern Table constants;
 // 存放声明为extern的标识符,用于警告外部标识符声明冲突
@@ -302,26 +292,4 @@ extern int level;
 extern Interface *IR;
 // 常量表
 extern Table constants;
-
-extern Type chartype;
-extern Type doubletype;
-extern Type floattype;
-extern Type inttype;
-extern Type longdouble;
-extern Type longtype;
-extern Type longlong;
-extern Type shorttype;
-extern Type signedchar;
-extern Type unsignedchar;
-extern Type unsignedlonglong;
-extern Type unsignedlong;
-extern Type unsignedshort;
-extern Type unsignedtype;
-extern Type charptype;
-extern Type funcptype;
-extern Type voidptype;
-extern Type voidtype;
-extern Type unsignedptr;
-extern Type signedptr;
-extern Type widechar;
 #endif
