@@ -27,6 +27,41 @@
  */
 #define unqual(t) (isqual(t)?(t)->type:(t))
 
+#define isvolatile(t) ((t)->op == VOLATILE \
+					|| (t)->op == CONST+VOLATILE)
+
+#define isconst(t) ((t)->op == CONST \
+					|| (t)->op == CONST+VOLATILE)
+
+#define isarray(t)	(unqual(t)->op == ARRAY)
+
+#define isstruct(t) (unqual(t)->op == STRUCT \
+					|| (t)->op == UNION)
+
+#define isunion(t)	(unqual(t)->op == UNION)
+
+#define isfunc(t)	(unqual(t)->op == FUNCTION)
+
+#define isptr(t)	(unqual(t)->op == POINTER)
+
+#define ischar(t)	((t)->size ==1 && isint(t))
+
+#define isint(t)	(unqual(t)->op == INT \
+					|| unqual(t)->op == UNSIGNED)
+
+#define isfloat(t)	(unqual(t)->op == FLOAT)
+
+#define isarith(t)	(unqual(t)->op <= UNSIGNED)
+
+#define isunsigned(t)	(unqual(t)->op == UNSIGNED)
+
+#define isscalar(t)	(unqual(t)->op <= POINTER \
+					|| unqual(t)->op == ENUM)
+
+#define isenum(t)	(unqual(t)->op == ENUM)
+
+
+
 typedef struct node *Node;
 // 指针循环列表
 typedef struct _list *List;
@@ -141,8 +176,7 @@ struct _list {
 extern List append(void *x, List plist);
 extern int length(List plist);
 extern void *ltov(List *plist, unsigned a);
-// rmtypes将其类型缓冲中删除
-extern void rmtypes(int);
+
 extern void error(const char*, ...);
 // 符号表的表示
 extern Table table(Table tp, int level);
@@ -150,8 +184,27 @@ extern void foreach(Table tp, int level, void(*apply)(Symbol, void *), void *cl)
 // 作用域的改变
 extern void enterscope();
 extern void exitscope();
-// 查找个建立标识符
+
+/*
+install函数为给定的name分配一个符号，
+并把该符号加入与给定作用域层数相对应的表中。
+如果需要，还将建立一个新表。
+该函数返回一个指向符号的指针。
+name存放了字符串，根据其地址可以计算它的哈希值。
+tpp是一个指向表的指针。
+如果*tpp指向某作用域的表,如identifiers，
+并且目前没有与参数level给定的作用域相对应的表.
+则install将先为参数level给定的作用域分配一个表。
+并更新*tpp;
+然后 install分配一个入口，将该项清零，
+最后初始化符号的某些域，并把该入口加入哈希链表中。
+level必须为0，或不小于该表的作用域层数。
+如果level为0，则表示name应该建立在*tpp表示的表格中。
+install接受一个指明相应分配区的参数，如果有函数原型，
+则使其中的符号可以永久保存，即使它们是在内层作用域中声明的。
+*/
 extern Symbol install(char *name, Table *tpp, int level, int arena);
+
 extern Symbol lookup(const char*name, Table tp);
 // 标号
 extern int genlabel(int);
@@ -169,8 +222,11 @@ extern void use(Symbol, Coordinate);
 extern void locus(Table, Coordinate*);
 
 extern Type btot(int, int);
-
+// 类型管理
 extern int eqtype(Type, Type, int);
+extern void rmtypes(int);
+extern void type_init(int,char* []);
+
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，

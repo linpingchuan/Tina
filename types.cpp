@@ -17,7 +17,6 @@ static struct entry {
 } *typetable[128];
 
 
-
 Type chartype;
 Type doubletype;
 Type floattype;
@@ -66,6 +65,9 @@ Type btot(int op, int size) {
  * type总是为函数类型和不完全的数组类型创建新类型。
  * 创建新类型时，type初始化参数指定的域，清空x域，
  * 将类型加入相应的哈希链中，并返回新的类型。
+ * ------------------------------------------------
+ * type在搜索typetable时，利用类型操作符和操作数地址的异或值作为哈希值，
+ * 搜索相应的哈希链，寻找具有相同操作符、操作数、大小、对齐字节数和符号表入口的类型。
  */
 static Type type(int op, Type ty, int size, int align, void *sym) {
 	unsigned h = (op ^ ((unsigned long)ty >> 3))&(NELEMS(typetable) - 1);
@@ -84,4 +86,17 @@ static Type type(int op, Type ty, int size, int align, void *sym) {
 	tn->link = typetable[h];
 	typetable[h] = tn;
 	return &tn->type;
+}
+
+static Type xxinit(int op, char *name, Metrics m) {
+	Symbol p = install(string(name), &types, GLOBAL, PERM);
+
+}
+
+/** typetable 在初始化时，只具有固有类型和void*类型
+ * 前端使用这些变量引用特定类型，避免为已知存在的类型搜索typetable.
+ * type_init函数初始化这些全局变量和typetable
+ */
+void type_init(int argc,char *argv[]) {
+
 }
