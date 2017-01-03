@@ -61,7 +61,12 @@ Type btot(int op, int size) {
 #undef xx
 	return 0;
 }
-
+/**
+ * type函数在typetable中搜索指定类型或者创造一个新的类型。
+ * type总是为函数类型和不完全的数组类型创建新类型。
+ * 创建新类型时，type初始化参数指定的域，清空x域，
+ * 将类型加入相应的哈希链中，并返回新的类型。
+ */
 static Type type(int op, Type ty, int size, int align, void *sym) {
 	unsigned h = (op ^ ((unsigned long)ty >> 3))&(NELEMS(typetable) - 1);
 	struct entry *tn;
