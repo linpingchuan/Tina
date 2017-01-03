@@ -24,6 +24,7 @@
 /**
  * unqual函数类型返回类型(Type)的未限定(unqualified)形式。
  * 即去掉类型中的const和volatile.
+ * 大多数操作作用于未限定类型，未限定类型可通过调用unqual获得。
  */
 #define unqual(t) (isqual(t)?(t)->type:(t))
 
@@ -109,6 +110,25 @@ typedef struct metrics {
 }Metrics;
 
 typedef struct interface {
+	Metrics charmetric;
+	Metrics shortmetric;
+	Metrics intmetric;
+	Metrics longmetric;
+	Metrics longlongmetric;
+	Metrics floatmetric;
+	Metrics doublemetric;
+	Metrics longdoublemetric;
+	Metrics ptrmetric;
+	Metrics structmetric;
+
+	unsigned little_endian : 1;
+	unsigned mulops_calls : 1;
+	unsigned wants_callb : 1;
+	unsigned wants_argb : 1;
+	unsigned left_to_right : 1;
+	unsigned wants_dag : 1;
+	unsigned unsigned_char : 1;
+
 	void(*defsymbol)(Symbol);
 	void(*local)(Symbol);
 }Interface;

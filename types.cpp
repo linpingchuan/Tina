@@ -16,6 +16,7 @@ static struct entry {
 	struct entry *link;
 } *typetable[128];
 
+static Symbol pointersym;
 
 Type chartype;
 Type doubletype;
@@ -90,7 +91,17 @@ static Type type(int op, Type ty, int size, int align, void *sym) {
 
 static Type xxinit(int op, char *name, Metrics m) {
 	Symbol p = install(string(name), &types, GLOBAL, PERM);
+	Type ty = type(op, 0, m.size, m.align, p);
 
+	assert(ty->align == 0 || ty->size%ty->align == 0);
+	p->type = ty;
+	p->addressed = m.outoflines;
+	switch (ty->op) {
+	case INT:
+		break;
+	default:assert(0);
+	}
+	return ty;
 }
 
 /** typetable 在初始化时，只具有固有类型和void*类型
@@ -99,4 +110,12 @@ static Type xxinit(int op, char *name, Metrics m) {
  */
 void type_init(int argc,char *argv[]) {
 
+}
+/**
+ * type函数可以构造任意类型，其他函数封装了对type的调用。
+ */
+
+// ptr函数创建指针类型
+Type ptr(Type ty) {
+	return type(POINTER, ty, IR->ptrmetric.size, IR->ptrmetric.align, pointersym);
 }
