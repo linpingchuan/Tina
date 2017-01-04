@@ -18,6 +18,8 @@ static struct entry {
 
 static Symbol pointersym;
 
+static int maxlevel;
+
 Type chartype;
 Type doubletype;
 Type floattype;
@@ -39,9 +41,18 @@ Type voidttype;
 Type unsignedptr;
 Type signedptr;
 Type widechar;
-
+/**
+ * exitscope调用rmtypes(lev)从typetable中删除那些u.sym->scope大于或等于lev的类型
+ */
 void rmtypes(int lev) {
-
+	if (maxlevel >= lev) {
+		int i;
+		maxlevel = 0;
+		for (i = 0; i < NELEMS(typetable); i++) {
+			struct entry *tn, **tq = &typetable[i];
+			// TODO
+		}
+	}
 }
 /**
  * eqtype函数用于测试类型是否相同。
@@ -178,6 +189,19 @@ void type_init(int argc,char *argv[]) {
 	xx(unsignedtype, "unsigned int", UNSIGNED, intmetric);
 	xx(unsignedlonglong, "unsigned long long", UNSIGNED, longlongmetric);
 #undef xx
+	{
+		/**
+		 * types表包含了标识符或标记命名的所有类型。
+		 * 基本类型由xxinit装载，且不会被删除。
+		 * exitscope函数将结构、联合、枚举类型的符号表入口从types中删除时，
+		 * 与结构、联合、枚举标记相关联的类型也必须从types表中删除。
+		 * exitscope调用rmtypes(lev)从typetable中删除那些u.sym->scope大于或等于lev的类型。
+		 */
+		Symbol p;
+		p = install(string("void"), &types, GLOBAL, PERM);
+		voidtype = type(VOID, NULL, 0, 0, p);
+		p->type = voidtype;
+	}
 }
 /**
  * type函数可以构造任意类型，其他函数封装了对type的调用。
