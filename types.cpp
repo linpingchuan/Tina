@@ -22,7 +22,7 @@ Type chartype;
 Type doubletype;
 Type floattype;
 Type inttype;
-Type longdoble;
+Type longdouble;
 Type longtype;
 Type longlong;
 Type shorttype;
@@ -88,16 +88,41 @@ static Type type(int op, Type ty, int size, int align, void *sym) {
 	typetable[h] = tn;
 	return &tn->type;
 }
-
+/**
+ * 无符号整数类型与有符号整数整形具有相同的类型操作符、大小和对齐字节数，
+ * 但具有不同的符号表入口,因此要为他们构建不同类型。
+ * 同样，lcc假设long,int,long double和double具有相同的结构。
+ * 但每种都是单独的一种类型。
+ * 测试某个类型是否表示长整数类型，只要将该类型与longtype进行比较。
+ * IR指向后端提供的接口记录。
+ * 类型void没有度量。
+ * 
+ */
 static Type xxinit(int op, char *name, Metrics m) {
 	Symbol p = install(string(name), &types, GLOBAL, PERM);
 	Type ty = type(op, 0, m.size, m.align, p);
 
 	assert(ty->align == 0 || ty->size%ty->align == 0);
 	p->type = ty;
-	p->addressed = m.outoflines;
+	p->addressed = m.outofline;
+
 	switch (ty->op) {
 	case INT:
+		p->u.limits.max.i = ones(8 * ty->size) >> 1;
+		p->u.limits.min.i = -p->u.limits.max.i - 1;
+		break;
+	case UNSIGNED:
+		p->u.limits.max.u = ones(8 * ty->size);
+		p->u.limits.max.u = 0;
+		break;
+	case FLOAT:
+		if (ty->size == sizeof(float))
+			p->u.limits.max.d = FLT_MAX;
+		else if (ty->size == sizeof(double))
+			p->u.limits.max.d = DBL_MAX;
+		else
+			p->u.limits.max.d = LDBL_MAX;
+		p->u.limits.min.d = -p->u.limits.max.d;
 		break;
 	default:assert(0);
 	}
@@ -106,10 +131,53 @@ static Type xxinit(int op, char *name, Metrics m) {
 
 /** typetable 在初始化时，只具有固有类型和void*类型
  * 前端使用这些变量引用特定类型，避免为已知存在的类型搜索typetable.
- * type_init函数初始化这些全局变量和typetable
+ * type_init函数初始化这些全局变量和typetable.
  */
 void type_init(int argc,char *argv[]) {
+	static int inited;
+	int i;
 
+	if (inited)
+		return;
+	inited = 1;
+	if (!IR)
+		return;
+	for (i = 1; i < argc; i++) {
+		int size, align, outofline;
+		if (strncmp(argv[i], "-unsigned_char=", 15) == 0)
+			IR->unsigned_char = argv[i][15] - '0';
+#define xx(name) \
+	else if(sscanf_s(argv[i],"-"#name"=%d,%d,%d",&size,&align,&outofline)==3){\
+		IR->name.size=size;IR->name.align=align;\
+			IR->name.outofline = outofline;}
+		xx(charmetric)
+		xx(shortmetric)
+		xx(intmetric)
+		xx(longmetric)
+		xx(longlongmetric)
+		xx(floatmetric)
+		xx(doublemetric)
+		xx(longdoublemetric)
+		xx(ptrmetric)
+		xx(structmetric)
+#undef xx
+	}
+#define xx(v,name,op,metrics) v=xxinit(op,name,IR->metrics)
+	xx(chartype, "char", IR->unsigned_char ? UNSIGNED : INT, charmetric);
+	xx(doubletype, "double", FLOAT, doublemetric);
+	xx(floattype, "float", FLOAT, floatmetric);
+	xx(inttype, "int", INT, intmetric);
+	xx(longdouble, "long double", FLOAT, longdoublemetric);
+	xx(longtype, "long int", INT, longmetric);
+	xx(longlong, "long long int", INT, longlongmetric);
+	xx(shorttype, "short", INT, shortmetric);
+	xx(signedchar, "signed char", INT, charmetric);
+	xx(unsignedchar, "unsigned char", UNSIGNED, charmetric);
+	xx(unsignedlong, "unsigned long", UNSIGNED, longmetric);
+	xx(unsignedshort, "unsigned short", UNSIGNED, shortmetric);
+	xx(unsignedtype, "unsigned int", UNSIGNED, intmetric);
+	xx(unsignedlonglong, "unsigned long long", UNSIGNED, longlongmetric);
+#undef xx
 }
 /**
  * type函数可以构造任意类型，其他函数封装了对type的调用。

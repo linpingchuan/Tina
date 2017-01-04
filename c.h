@@ -61,7 +61,7 @@
 
 #define isenum(t)	(unqual(t)->op == ENUM)
 
-
+#define ones(n)		((n)>=8*sizeof(unsigned long)?~0UL:~((~0UL)<<(n)))
 
 typedef struct node *Node;
 // 指针循环列表
@@ -106,7 +106,7 @@ typedef struct {
 	void *xt;
 }Xtype;
 typedef struct metrics {
-	unsigned char size, align, outoflines;
+	unsigned char size, align, outofline;
 }Metrics;
 
 typedef struct interface {
