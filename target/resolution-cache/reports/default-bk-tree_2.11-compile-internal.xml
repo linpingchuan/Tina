@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="ivy-report.xsl"?>
+<ivy-report version="1.0">
+	<info
+		organisation="default"
+		module="bk-tree_2.11"
+		revision="1.0"
+		conf="compile-internal"
+		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, sources, docs, pom, scala-tool"
+		date="20161220153307"/>
+	<dependencies>
+		<module organisation="junit" name="junit">
+			<revision name="4.12" status="release" pubdate="20141204111743" resolver="activator-local" artresolver="activator-local" homepage="http://junit.org" downloaded="false" searched="true" default="false" conf="default, compile, runtime, default(compile), master" position="1">
+				<license name="Eclipse Public License 1.0" url="http://www.eclipse.org/legal/epl-v10.html"/>
+				<metadata-artifact status="no" details="" size="3317" time="0" location="C:\Users\Paul\.ivy2\cache\junit\junit\ivy-4.12.xml" searched="true" original-local-location="C:\activator-dist-1.3.10\repository\junit\junit\4.12\ivys\ivy.xml" origin-is-local="true" origin-location="C:\activator-dist-1.3.10\repository\junit\junit\4.12\ivys\ivy.xml"/>
+				<caller organisation="default" name="bk-tree_2.11" conf="compile-internal, compile, provided, optional" rev="4.12" rev-constraint-default="4.12" rev-constraint-dynamic="4.12" callerrev="1.0"/>
+				<artifacts>
+					<artifact name="junit" type="jar" ext="jar" status="no" details="" size="314932" time="0" location="C:\activator-dist-1.3.10\repository\junit\junit\4.12\jars\junit.jar">
+						<origin-location is-local="true" location="C:\activator-dist-1.3.10\repository\junit\junit\4.12\jars\junit.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.hamcrest" name="hamcrest-core">
+			<revision name="1.3" status="release" pubdate="20120709170802" resolver="activator-local" artresolver="activator-local" homepage="" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="2">
+				<license name="New BSD License" url="http://www.opensource.org/licenses/bsd-license.php"/>
+				<metadata-artifact status="no" details="" size="2617" time="0" location="C:\Users\Paul\.ivy2\cache\org.hamcrest\hamcrest-core\ivy-1.3.xml" searched="true" original-local-location="C:\activator-dist-1.3.10\repository\org.hamcrest\hamcrest-core\1.3\ivys\ivy.xml" origin-is-local="true" origin-location="C:\activator-dist-1.3.10\repository\org.hamcrest\hamcrest-core\1.3\ivys\ivy.xml"/>
+				<caller organisation="junit" name="junit" conf="default, compile, runtime, master" rev="1.3" rev-constraint-default="1.3" rev-constraint-dynamic="1.3" callerrev="4.12"/>
+				<artifacts>
+					<artifact name="hamcrest-core" type="jar" ext="jar" status="no" details="" size="45024" time="0" location="C:\activator-dist-1.3.10\repository\org.hamcrest\hamcrest-core\1.3\jars\hamcrest-core.jar">
+						<origin-location is-local="true" location="C:\activator-dist-1.3.10\repository\org.hamcrest\hamcrest-core\1.3\jars\hamcrest-core.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.scala-lang" name="scala-library">
+			<revision name="2.11.8" status="release" pubdate="20160304102633" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.scala-lang.org/" extra-info.apiURL="http://www.scala-lang.org/api/2.11.8/" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="0">
+				<license name="BSD 3-Clause" url="http://www.scala-lang.org/license.html"/>
+				<metadata-artifact status="no" details="" size="2642" time="0" location="C:\Users\Paul\.ivy2\cache\org.scala-lang\scala-library\ivy-2.11.8.xml" searched="false" origin-is-local="false" origin-location="file:////C:/迅雷下载/typesafe-activator-1.3.10/activator-dist-1.3.10/repository/org.scala-lang/scala-library/2.11.8/ivys/ivy.xml"/>
+				<caller organisation="default" name="bk-tree_2.11" conf="compile-internal, compile, provided, optional" rev="2.11.8" rev-constraint-default="2.11.8" rev-constraint-dynamic="2.11.8" callerrev="1.0"/>
+				<artifacts>
+					<artifact name="scala-library" type="jar" ext="jar" status="no" details="" size="5744974" time="0" location="C:\Users\Paul\.ivy2\cache\org.scala-lang\scala-library\jars\scala-library-2.11.8.jar">
+						<origin-location is-local="false" location="file:////C:/迅雷下载/typesafe-activator-1.3.10/activator-dist-1.3.10/repository/org.scala-lang/scala-library/2.11.8/jars/scala-library.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+	</dependencies>
+</ivy-report>
