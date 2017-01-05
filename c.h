@@ -251,6 +251,7 @@ extern Type ptr(Type ty);
 extern Type deref(Type ty);
 extern Type array(Type, int, int);
 extern Type func(Type ty, Type *proto, int style);
+extern Type atop(Type);
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，

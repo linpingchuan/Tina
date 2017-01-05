@@ -241,13 +241,13 @@ Type func(Type ty, Type *proto, int style) {
  * array(ty,n,a)函数创建类型(ARRAY n ty)，
  * 结果类型的对其字节数就是ty的对齐字节数。
  * array还检查非法操作数.
+ * C语言中，不允许出现函数数组，void类型数组以及除GLOBAL外其他任意作用域的不完全(长度为0)数组。
+ * array不能表示超过INT_MAX字节的数组的大小，因此array也禁止大小超过INT_MAX字节的数组。
+ * 如果lcc编译选项-A出现了两次，则将Aflag置为2，表示lcc要对ANSI用法报警。
+ * 因此，当Aflag等于2时，如果声明的不完全数组的类型是不完全类型，array应该输出警告信息。
  */
 Type array(Type ty, int n, int a) {
 	assert(ty);
-	/*  
-	 * C语言中，不允许出现函数数组，void类型数组以及除GLOBAL外其他任意作用域的不完全(长度为0)数组。
-	 * array不能表示超过INT_MAX字节的数组的大小，因此array也禁止大小超过INT_MAX字节的数组。
-	 */
 	if (isfunc(ty)) {
 		error("illegal type 'array of %t'\n", ty);
 		return array(inttype, n, 0);
@@ -266,4 +266,15 @@ Type array(Type ty, int n, int a) {
 	}
 
 	return type(ARRAY, ty, n*ty->size, a ? a : ty->align, NULL);
+}
+/**
+ * 在许多情况下，数组类型"退化"(decay)为指向数组元素类型的指针
+ * 例如当数组作为形参的类型时。
+ * atop函数实现这种"退化".
+ */
+Type atop(Type ty) {
+	if (isarray(ty))
+		return ptr(ty->type);
+	error("type error: %s\n", "array expected");
+	return ptr(ty);
 }
