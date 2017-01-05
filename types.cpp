@@ -37,7 +37,7 @@ Type unsignedtype;
 Type funcptype;
 Type charptype;
 Type voidptype;
-Type voidttype;
+Type voidtype;
 Type unsignedptr;
 Type signedptr;
 Type widechar;
@@ -90,11 +90,11 @@ static Type type(int op, Type ty, int size, int align, void *sym) {
 				&&tn->type.size == size&&tn->type.align == align
 				&&tn->type.u.sym == sym)
 				return &tn->type;
-	tn =(struct entry*) memset(allocate(sizeof*(tn), PERM), 0, sizeof*(tn));
+	tn = (struct entry*) memset(allocate(sizeof*(tn), PERM), 0, sizeof*(tn));
 	tn->type.op = op;
 	tn->type.type = ty;
 	tn->type.size = size;
-	tn->type.u.sym =(Symbol) sym;
+	tn->type.u.sym = (Symbol)sym;
 	tn->link = typetable[h];
 	typetable[h] = tn;
 	return &tn->type;
@@ -107,7 +107,7 @@ static Type type(int op, Type ty, int size, int align, void *sym) {
  * 测试某个类型是否表示长整数类型，只要将该类型与longtype进行比较。
  * IR指向后端提供的接口记录。
  * 类型void没有度量。
- * 
+ *
  */
 static Type xxinit(int op, char *name, Metrics m) {
 	Symbol p = install(string(name), &types, GLOBAL, PERM);
@@ -144,7 +144,7 @@ static Type xxinit(int op, char *name, Metrics m) {
  * 前端使用这些变量引用特定类型，避免为已知存在的类型搜索typetable.
  * type_init函数初始化这些全局变量和typetable.
  */
-void type_init(int argc,char *argv[]) {
+void type_init(int argc, char *argv[]) {
 	static int inited;
 	int i;
 
@@ -162,15 +162,15 @@ void type_init(int argc,char *argv[]) {
 		IR->name.size=size;IR->name.align=align;\
 			IR->name.outofline = outofline;}
 		xx(charmetric)
-		xx(shortmetric)
-		xx(intmetric)
-		xx(longmetric)
-		xx(longlongmetric)
-		xx(floatmetric)
-		xx(doublemetric)
-		xx(longdoublemetric)
-		xx(ptrmetric)
-		xx(structmetric)
+			xx(shortmetric)
+			xx(intmetric)
+			xx(longmetric)
+			xx(longlongmetric)
+			xx(floatmetric)
+			xx(doublemetric)
+			xx(longdoublemetric)
+			xx(ptrmetric)
+			xx(structmetric)
 #undef xx
 	}
 #define xx(v,name,op,metrics) v=xxinit(op,name,IR->metrics)
@@ -202,12 +202,68 @@ void type_init(int argc,char *argv[]) {
 		voidtype = type(VOID, NULL, 0, 0, p);
 		p->type = voidtype;
 	}
+	pointersym = install(string("T*"), &types, GLOBAL, PERM);
+	pointersym->addressed = IR->ptrmetric.outofline;
+	pointersym->u.limits.max.p = (void*)ones(8 * IR->ptrmetric.size);
+	pointersym->u.limits.min.p = 0;
+	voidtype = ptr(voidtype);
+	funcptype = ptr(func(voidtype, NULL, 1));
+	chartype = ptr(chartype);
 }
 /**
  * type函数可以构造任意类型，其他函数封装了对type的调用。
  */
 
-// ptr函数创建指针类型
+ // ptr函数创建指针类型
 Type ptr(Type ty) {
 	return type(POINTER, ty, IR->ptrmetric.size, IR->ptrmetric.align, pointersym);
+}
+/**
+ * deref间接访问指针，
+ * 即deref返回引用类型，给定类型(POINTER ty),deref返回ty.
+ * def在操作数非法时产生错误。
+ * 从技术上来说，这些测试是类型检查的一部分，不属于类型构造，将这部分测试放到类型构造中，可以简化类型检查代码，避免疏漏。
+ * deref的最后一行处理指向枚举的指针：间接访问枚举指针必须返回与它关联的未限定整数类型。
+ */
+Type deref(Type ty) {
+	if (isptr(ty))
+		ty = ty->type;
+	else
+		error("type error: %s\n", "pointer expected");
+	return isenum(ty) ? unqual(ty)->type : ty;
+}
+
+Type func(Type ty, Type *proto, int style) {
+	return ty;
+}
+
+/**
+ * array(ty,n,a)函数创建类型(ARRAY n ty)，
+ * 结果类型的对其字节数就是ty的对齐字节数。
+ * array还检查非法操作数.
+ */
+Type array(Type ty, int n, int a) {
+	assert(ty);
+	/*  
+	 * C语言中，不允许出现函数数组，void类型数组以及除GLOBAL外其他任意作用域的不完全(长度为0)数组。
+	 * array不能表示超过INT_MAX字节的数组的大小，因此array也禁止大小超过INT_MAX字节的数组。
+	 */
+	if (isfunc(ty)) {
+		error("illegal type 'array of %t'\n", ty);
+		return array(inttype, n, 0);
+	}
+	if (level >= GLOBAL&&isarray(ty) && ty->size == 0)
+		error("missing array size\n");
+	if (ty->size == 0) {
+		if (unqual(ty) == voidtype)
+			error("illegal type 'array of %t'\n", ty);
+		else if (Aflag >= 2)
+			warning("declaring type 'array of %t' is undefined\n", ty);
+	}
+	else if (n > INT_MAX / ty->size) {
+		error("size of 'array of %t' exceeds %d bytes", ty, INT_MAX);
+		n = 1;
+	}
+
+	return type(ARRAY, ty, n*ty->size, a ? a : ty->align, NULL);
 }

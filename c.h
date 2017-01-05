@@ -198,6 +198,7 @@ extern int length(List plist);
 extern void *ltov(List *plist, unsigned a);
 
 extern void error(const char*, ...);
+extern void warning(const char*, ...);
 // 符号表的表示
 extern Table table(Table tp, int level);
 extern void foreach(Table tp, int level, void(*apply)(Symbol, void *), void *cl);
@@ -246,7 +247,10 @@ extern Type btot(int, int);
 extern int eqtype(Type, Type, int);
 extern void rmtypes(int);
 extern void type_init(int,char* []);
-
+extern Type ptr(Type ty);
+extern Type deref(Type ty);
+extern Type array(Type, int, int);
+extern Type func(Type ty, Type *proto, int style);
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，
@@ -408,6 +412,8 @@ extern int level;
 extern Interface *IR;
 // 常量表
 extern Table constants;
+
+extern int Aflag;
 
 extern Type chartype;
 extern Type doubletype;
