@@ -282,6 +282,7 @@ struct _type {
 	int align;
 	int size;
 	union {
+		// 结构和联合类型是通过标记识别的。
 		Symbol sym;
 		// 函数类型的type域给出了函数返回值的类型
 		struct {
