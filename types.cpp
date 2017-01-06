@@ -258,6 +258,31 @@ Type func(Type ty, Type *proto, int style) {
 	return ty;
 }
 
+/*
+	freturn对于函数类型的作用与deref对指针类型的作用一样
+	他以类型(FUNCTION ty)作为输入，间接访问(FUNCTION ty),
+	生成函数返回值类型ty
+*/
+Type freturn(Type ty) {
+	if (isfunc(ty))
+		return ty->type;
+	error("type error: %s\n", "function expected");
+	return inttype;
+}
+/*
+	variadic断言通过查找函数原型的末尾是否有void类型来测试函数类型是否带有长度可变的参数列表
+	参数数目可变的函数要求至少声明了一个参数，然后才是0个或多个可选参数。
+	因此，判断时不会将在原型结尾处的void与不带参数的函数搞混淆，后者的原型只有1个元素，即{(VOID)}
+*/
+int variadic(Type ty) {
+	if (isfunc(ty) && ty->u.f.proto) {
+		int i;
+		for (i = 0; ty->u.f.proto[i]; i++)
+			;
+		return i > 1 && ty->u.f.proto[i - 1] == voidtype;
+	}
+	return 0;
+}
 /**
  * array(ty,n,a)函数创建类型(ARRAY n ty)，
  * 结果类型的对其字节数就是ty的对齐字节数。
