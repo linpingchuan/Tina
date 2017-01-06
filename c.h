@@ -252,6 +252,7 @@ extern Type deref(Type ty);
 extern Type array(Type, int, int);
 extern Type func(Type ty, Type *proto, int style);
 extern Type atop(Type);
+extern Type qual(int op, Type ty);
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，
@@ -280,6 +281,7 @@ struct _type {
 	int size;
 	union {
 		Symbol sym;
+		// 函数类型的type域给出了函数返回值的类型
 		struct {
 			unsigned oldstyle : 1;
 			Type *proto;

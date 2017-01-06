@@ -232,8 +232,29 @@ Type deref(Type ty) {
 		error("type error: %s\n", "pointer expected");
 	return isenum(ty) ? unqual(ty)->type : ty;
 }
+/*
+	struct{
+		unsigned oldstyle:1;
+		Type *proto;
+	}f;
+	f.oldstyle标记区分两种函数类型：
+	1表示旧风格(old style)类型，即省略参数的类型；
+	0表示新风格(new style)类型，即总是包含参数的类型。
+	f.proto指向以空指针(null)结尾的Type数组。
+	f.proto[i]是第i+1个参数的类型。
+	因为旧风格的函数类型可能带原型，需要f.oldstyle标记。
+	
+    -------------------------------------------------------------------
 
+	func函数创建类型（FUNCTION ty{proto}),ty是返回值类型，花括号括住的是圆形。
+	func初始化原型和old-style标记。
+ */
 Type func(Type ty, Type *proto, int style) {
+	if (ty && (isarray(ty) || isfunc(ty)))
+		error("illegal return type '%t'\n", ty);
+	ty = type(FUNCTION, ty, 0, 0, NULL);
+	ty->u.f.proto = proto;
+	ty->u.f.oldstyle = style;
 	return ty;
 }
 
@@ -277,4 +298,33 @@ Type atop(Type ty) {
 		return ptr(ty->type);
 	error("type error: %s\n", "array expected");
 	return ptr(ty);
+}
+/**
+ * qual分别构造限定类型。
+ * 给定限定类型ty,qual检查非法的操作数，
+ * 创建(CONST ty),(VOLATILE ty)或(CONST+VOLATILE ty).
+ * 如果ty是类型(ARRAY ety),而限定是作用于数组元素类型，
+ * 那么qual(op,ty)就会创建(ARRAY(op,ety))。
+ * 如果ty已经是限定的，即是(CONST ty->type)或(VOLATILE ty->type),
+ * 并且op是另一个限定符，那么qual创建(CONST+VOLATILE ty->type).
+ * 我们只使用一个类型节点而不是一或两个类型节点来描述限定类型
+ */
+Type qual(int op, Type ty) {
+	if (isarray(ty)) {
+		ty = type(ARRAY, qual(op, ty->type), ty->size, ty->align, NULL);
+	}
+	else if (isfunc(ty)) {
+		warning("qualified function type ignored\n");
+	}
+	else if (isconst(ty) && op == CONST || isvolatile(ty) && op == VOLATILE) {
+		error("illegal type %k %t\n", op, ty);
+	}
+	else {
+		if (isqual(ty)) {
+			op += ty->op;
+			ty = ty->type;
+		}
+		ty = type(op, ty, ty->size, ty->align, NULL);
+	}
+	return ty;
 }
