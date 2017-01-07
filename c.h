@@ -61,6 +61,14 @@
 
 #define isenum(t)	(unqual(t)->op == ENUM)
 
+#define fieldsize(p) (p)->bitsize
+
+#define filedright(p) ((p)->lsb-1)
+
+#define fieldleft(p) (8*(p)->type->size - filedsize(p) -fieldright(p))
+
+#define fieldmask(p) (~(~unsigned)0<<fieldsize(p))
+
 #define ones(n)		((n)>=8*sizeof(unsigned long)?~0UL:~((~0UL)<<(n)))
 
 typedef struct node *Node;
@@ -255,6 +263,7 @@ extern Type atop(Type);
 extern Type qual(int op, Type ty);
 extern Type freturn(Type);
 extern int variadic(Type);
+extern Type newstruct(int op, char *tag);
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，
@@ -360,10 +369,12 @@ struct symbol {
 		 * 如果两个或更多个内部标号指向相同位置，
 		 * 则这些标号的equatedto域指向其中一个标号。
 		 */
+		// 结构和枚举类型
 		struct {
 			int label;
 			Symbol equatedto;
 		}l;
+		// 函数类型
 		struct {
 			unsigned cfields : 1;
 			unsigned vfields : 1;

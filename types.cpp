@@ -283,6 +283,43 @@ int variadic(Type ty) {
 	}
 	return 0;
 }
+/*
+	newstruct创建新的类型(STRUCT["tag"])或(UNION["tag"]),
+	tag是标记。
+	声明或定义一个新的结构或联合时，无论有没有域列表，
+	structdcl函数调用newstruct。
+	创建新的结构体或联合类型时，类型的标记装入types表。
+	对匿名的结构和联合，也就是没有标记的结构和联合，
+	newstruct为它们生成标记。
+	---------------------------------------------
+	将新的标记加入types表时，
+	可能会创建作用域层数大于maxlevel的入口，
+	因此，如果需要，应调整maxlevel.
+
+*/
+Type newstruct(int op, char *tag) {
+	Symbol p;
+
+	assert(tag);
+	if (*tag == 0)
+		tag = stringd(genlabel(1));
+	else {
+		if ((p = lookup(tag, types)) != NULL && (p->scope == level
+			|| p->scope == PARAM
+			&&level == PARAM + 1)) {
+			if (p->type->op == op && !p->defined)
+				return p->type;
+			error("redefinition of '%s' previously defined at %w\n", p->name, &p->src);
+		}
+	}
+	p = install(tag, &types, level, PERM);
+	p->type = type(op, NULL, 0, 0, p);
+	if (p->scope > maxlevel)
+		maxlevel = p->scope;
+	p->src = src;
+	return p->type;
+
+}
 /**
  * array(ty,n,a)函数创建类型(ARRAY n ty)，
  * 结果类型的对其字节数就是ty的对齐字节数。
