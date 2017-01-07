@@ -161,7 +161,7 @@ Symbol install(char *name, Table *tpp, int level, int arena) {
  * 字符串模块保证当且仅当两个字符串完全相同是，
  * 它们才是同一个副本，所以字符串的比较非常简单。
  */
-Symbol lookup(char *name, Table tp) {
+Symbol lookup(const char *name, Table tp) {
 	struct entry *p;
 	unsigned h = (unsigned)name&(HASHSIZE - 1);
 	do

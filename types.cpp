@@ -292,10 +292,10 @@ int variadic(Type ty) {
 	对匿名的结构和联合，也就是没有标记的结构和联合，
 	newstruct为它们生成标记。
 	---------------------------------------------
-	将新的标记加入types表时，
-	可能会创建作用域层数大于maxlevel的入口，
-	因此，如果需要，应调整maxlevel.
-
+	将新的标记加入types表时，可能会创建作用域层数大于maxlevel的入口，因此，如果需要，应调整maxlevel.
+	结构类型指向它们的符号表入口，反过来符号表入口也指向结构类型，这样，标记可以映射到类型，类型也可以映射到标记.
+	例如，当标记用在声明符中时，标记映射成类型，参见structdcl。
+	当rmtypes将类型从typetable中删除时，需要将类型映射成标记。
 */
 Type newstruct(int op, char *tag) {
 	Symbol p;
@@ -304,7 +304,20 @@ Type newstruct(int op, char *tag) {
 	if (*tag == 0)
 		tag = stringd(genlabel(1));
 	else {
-		if ((p = lookup(tag, types)) != NULL && (p->scope == level
+		/*
+			在同一作用域中多次定义相同的标记是非法的，但多次声明同一标记是合法的。
+			如果给出了包含域的结构声明，那么就声明并定义了结构标记；
+			如果使用不包含域的结构标记，那么只是声明标记而已。例如：
+			struct employee{
+				char *name;
+				struct date *hired;
+				char ssn[9];
+			}
+			声明并定义了employee，但只是声明了date.
+			定义一个标记时，其defined标记被设置，通过检查defined标记可以判断标记是否重复定义。
+		*/
+		if ((p = lookup(tag, types)) != NULL 
+			&& (p->scope == level
 			|| p->scope == PARAM
 			&&level == PARAM + 1)) {
 			if (p->type->op == op && !p->defined)

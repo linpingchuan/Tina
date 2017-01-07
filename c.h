@@ -234,7 +234,7 @@ install接受一个指明相应分配区的参数，如果有函数原型，
 */
 extern Symbol install(char *name, Table *tpp, int level, int arena);
 
-extern Symbol lookup(const char*name, Table tp);
+extern Symbol lookup(const char* name, Table tp);
 // 标号
 extern int genlabel(int);
 extern Symbol findlabel(int);
