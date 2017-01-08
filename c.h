@@ -265,6 +265,8 @@ extern Type freturn(Type);
 extern int variadic(Type);
 extern Type newstruct(int op, char *tag);
 extern Field newfield(char *, Type, Type);
+extern Type promote(Type ty);
+extern Type compose(Type ty1, Type ty2);
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，

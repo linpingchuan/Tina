@@ -112,14 +112,31 @@ int eqtype(Type ty1, Type ty2, int ret) {
 			Type *p1 = ty1->u.f.proto, *p2 = ty2->u.f.proto;
 			if (p1 == p2)
 				return 1;
+			// 当这两个函数都有原型时，情况相对简单一些。
+			// 原型必须具有相同数目的参数类型，每个原型中的类型的非限定形式必须兼容.
+			// 其他情况，如果其中一个函数类型有原型，
+			// 则该函数类型的每个参数的类型必须与应用了默认参数提升(default argument promotion)
+			// 得到的类型本身的非限定形式兼容。
+			// 同时，如果具有原型的函数原型的参数个数不变，则两个函数类型不兼容。
 			if (p1&&p2) {
 				for (; *p1&&*p2; p1++, p2++) {
 					if (eqtype(unqual(*p1), unqual(*p2), 1) == 0)
 						return 0;
 				}
+				if (*p1 == NULL&&*p2 == NULL)
+					return 1;
 			}
 			else {
-
+				if (variadic(p1 ? ty1 : ty2))
+					return 0;
+				if (p1 == NULL)
+					p1 = p2;
+				for (; *p1; p1++) {
+					Type ty = unqual(*p1);
+					if (promote(ty) != ty || ty == floattype)
+						return 0;
+				}
+				return 1;
 			}
 			return 0;
 
@@ -129,7 +146,49 @@ int eqtype(Type ty1, Type ty2, int ret) {
 	assert(0);
 	return 0;
 }
+/*
+	默认参数提升：
+	1.浮点提升为双精度；
+	2.小整数和枚举提升为整数或无符号数。
+*/
+Type promote(Type ty) {
+	ty = unqual(ty);
+	switch (ty->op) {
+	case ENUM:
+		return inttype;
+	case INT:
+		if (ty->size < inttype->size)
+			return inttype;
+		break;
+	case UNSIGNED:
+		if (ty->size < inttype->size)
+			return inttype;
+		if (ty->size < unsignedtype->size)
+			return unsignedtype;
+		break;
+	case FLOAT:
+		if (ty->size < doubletype->size)
+			return doubletype;
+	}
+	return ty;
+}
 
+Type compose(Type ty1, Type ty2) {
+	if (ty1 == ty2)
+		return ty1;
+	assert(ty1->op == ty2->op);
+	switch (ty1->op) {
+	case POINTER:
+		return ptr(compose(ty1->type, ty2->type));
+	case CONST+VOLATILE:
+		return qual(CONST, qual(VOLATILE, compose(ty1->type, ty2->type)));
+	case CONST:case VOLATILE:
+		return qual(ty1->op, compose(ty1->type, ty2->type));
+
+	}
+	assert(0);
+	return NULL;
+}
 Type btot(int op, int size) {
 #define xx(ty) if(size==(ty)->size) return ty;
 #undef xx
