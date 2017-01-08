@@ -264,6 +264,7 @@ extern Type qual(int op, Type ty);
 extern Type freturn(Type);
 extern int variadic(Type);
 extern Type newstruct(int op, char *tag);
+extern Field newfield(char *, Type, Type);
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，
@@ -431,6 +432,7 @@ extern Interface *IR;
 extern Table constants;
 
 extern int Aflag;
+extern int xref;
 
 extern Type chartype;
 extern Type doubletype;

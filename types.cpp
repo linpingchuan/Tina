@@ -54,16 +54,79 @@ void rmtypes(int lev) {
 		}
 	}
 }
-/**
- * eqtype函数用于测试类型是否相同。
+/*
+  eqtype函数用于测试类型是否相同。
+  判断两个类型是否兼容是类型检查的关键。
+  如果两个类型兼容，eqtype函数返回1，反之返回0.
+  如果ty1或ty2是不完全类型，则eqtype返回第三个参数ret的值。
+  每个类型总是与自身兼容。
+  
+
  */
 int eqtype(Type ty1, Type ty2, int ret) {
+	/*
+		type函数保证大多数类型只有一个实例，这样许多兼容类型都可以通过eqtype的第一步测试。
+		同样，许多类型不兼容都是因为测试类型具有不同的操作符，绝对是不兼容的，导致eqtype返回0.
+	*/
 	if (ty1 == ty2)
 		return 1;
+	/*
+		如果不同类型具有相同的操作符CHAR，SHORT，UNSIGNED或INT，
+		但表示不同的类型，如unsigned short和signed short，这两个类型也不兼容。
+		同样，两个枚举类型，结构或联合类型，只有当他们是相同类型才是兼容的。
+	*/
 	if (ty1->op != ty2->op)
 		return 0;
+	/*
+		1.指针类型：如果两个指针类型引用的类型兼容，则指针类型兼容;
+		
+		2.非限定类型：如果两个相似的限定类型的非限定类型，则它们也兼容;
+		
+		3.数组类型：如果其中一个数组为不完全类型，eqtype返回ret，否则它们的类型仍兼容。
+				   当eqtype递归调用自身时，ret总为1，在别处调用时ret通常也为1.
+				   一些操作符，如指针比较，要求操作数要么都是不完全类型，要么都是完全类型，
+				   这时eqtype的调用参数ret等于0.
+				   上面代码中的第一个测试时处理两个数组的大小都是位置的情况.
+		
+		4.函数类型：如果两个函数类型的返回类型和原型都兼容，那么这两个函数类型都兼容。
+				   
+	*/
+	switch (ty1->op) {
+	case ENUM:case UNION:case STRUCT:
+	case UNSIGNED:case INT:case FLOAT:
+		return 0;
+	case POINTER:
+		return eqtype(ty1->type, ty2->type, 1);
+	case CONST:case VOLATILE:case CONST+VOLATILE:
+		return eqtype(ty1->type, ty2->type, 1);
+	case ARRAY:
+		if (eqtype(ty1->type, ty2->type, 1)) {
+			if (ty1->size == ty2->size)
+				return 1;
+			if (ty1->size == 0 || ty2->size == 0)
+				return ret;
+		}
+		return 0;
+	case FUNCTION:
+		if (eqtype(ty1->type, ty2->type, 1)) {
+			Type *p1 = ty1->u.f.proto, *p2 = ty2->u.f.proto;
+			if (p1 == p2)
+				return 1;
+			if (p1&&p2) {
+				for (; *p1&&*p2; p1++, p2++) {
+					if (eqtype(unqual(*p1), unqual(*p2), 1) == 0)
+						return 0;
+				}
+			}
+			else {
 
-	//assert(0);
+			}
+			return 0;
+
+		}
+	}
+
+	assert(0);
 	return 0;
 }
 
@@ -339,6 +402,29 @@ Type newstruct(int op, char *tag) {
 	p->src = src;
 	return p->type;
 
+}
+/*
+	newfield函数分配一个field结构，将该结构附加到结构类型ty的符号表入口的域列表中，
+	从而在ty中加入一个类型为fty的域。
+*/
+Field newfield(char *name, Type ty, Type fty) {
+	Field p, *q = &ty->u.sym->u.s.flist;
+	if (name == NULL)
+		name = stringd(genlabel(1));
+	for (p = *q; p; q = &p->link, p = *q)
+		if (p->name == name)
+			error("duplicate field name '%s' in '%t'\n", name, ty);
+	p = (Field)memset(allocate(sizeof*(p), PERM), 0, sizeof*(p));
+	*q = p;
+	p->name = name;
+	p->type = ty;
+
+	if (xref) {
+		if (ty->u.sym->u.s.ftab == NULL)
+			ty->u.sym->u.s.ftab = table(NULL, level);
+		install(name, &ty->u.sym->u.s.ftab, 0, PERM)->src = src;
+	}
+	return p;
 }
 /**
  * array(ty,n,a)函数创建类型(ARRAY n ty)，
