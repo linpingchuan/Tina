@@ -172,7 +172,7 @@ Type promote(Type ty) {
 	}
 	return ty;
 }
-
+// TODO
 Type compose(Type ty1, Type ty2) {
 	if (ty1 == ty2)
 		return ty1;
@@ -184,7 +184,15 @@ Type compose(Type ty1, Type ty2) {
 		return qual(CONST, qual(VOLATILE, compose(ty1->type, ty2->type)));
 	case CONST:case VOLATILE:
 		return qual(ty1->op, compose(ty1->type, ty2->type));
-
+	case ARRAY:
+		Type ty = compose(ty1->type, ty2->type);
+		if (ty1->size
+			&& (ty1->type->size&&ty2->size == 0 || ty1->size == ty2->size))
+			return array(ty, ty1->size / ty1->type->size, ty1->align);
+		if (ty2->size
+			&&ty2->type->size&&ty1->size == 0)
+			return array(ty, ty2->size / ty2->type->size, ty2->align);
+		return array(ty, 0, 0);
 	}
 	assert(0);
 	return NULL;
