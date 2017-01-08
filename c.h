@@ -7,6 +7,7 @@
 #include <limits.h>
 #include <string.h>
 #include "config.h"
+#include "token.h"
 
 // 宏NEW返回一个指向尚未初始化的空间指针
 #define NEW(p,a) ((p)=allocate(sizeof*(p),(a)))
@@ -426,7 +427,7 @@ struct symbol {
 	Xsymbol x;
 };
 
-#include "token.h"
+
 
 // 符号表子集
 extern Table constants;

@@ -189,6 +189,7 @@ Type compose(Type ty1, Type ty2) {
 	case CONST:case VOLATILE:
 		return qual(ty1->op, compose(ty1->type, ty2->type));
 	case ARRAY:
+	{
 		// 	如果两个兼容的数组类型中有一个完全类型，则形成的新数组类型的大小等于完全类型的大小。
 		Type ty = compose(ty1->type, ty2->type);
 		if (ty1->size
@@ -198,13 +199,16 @@ Type compose(Type ty1, Type ty2) {
 			&&ty2->type->size&&ty1->size == 0)
 			return array(ty, ty2->size / ty2->type->size, ty2->align);
 		return array(ty, 0, 0);
+	}
 	case FUNCTION:
+	{
 		// 两个兼容的函数类型所形成的的复合类型的返回类型是这两个函数类型的返回类型的复合，
 		// 参数类型是相应参数类型的复合。而如果其中一个函数类型没有原型，则复合类型的原型来自于另一个函数类型。
 		// 数据结构List是指针列表，通过列表函数append和ltov对List进行操作。
 		Type *p1 = ty1->u.f.proto, *p2 = ty2->u.f.proto;
+		Type ty = compose(ty1->type, ty2->type);
 		List tlist = NULL;
-		if (p1 == NULL&p2 == NULL)
+		if (p1 == NULL&&p2 == NULL)
 			return func(ty, NULL, 1);
 		if (p1&&p2 == NULL)
 			return func(ty, p2, ty1->u.f.oldstyle);
@@ -219,6 +223,8 @@ Type compose(Type ty1, Type ty2) {
 			tlist = append(ty, tlist);
 		}
 		return func(ty, (Type *)ltov(&tlist, PERM), 0);
+	}
+		
 	}
 	
 
