@@ -193,7 +193,14 @@ Type compose(Type ty1, Type ty2) {
 			&&ty2->type->size&&ty1->size == 0)
 			return array(ty, ty2->size / ty2->type->size, ty2->align);
 		return array(ty, 0, 0);
+	case FUNCTION:
+		Type *p1 = ty1->u.f.proto, *p2 = ty2->u.f.proto;
+		List tlist = NULL;
+		if (p1 == NULL&p2 == NULL)
+			return func(ty, NULL, 1);
 	}
+	
+
 	assert(0);
 	return NULL;
 }
