@@ -71,6 +71,8 @@
 
 #define ones(n)		((n)>=8*sizeof(unsigned long)?~0UL:~((~0UL)<<(n)))
 
+#define optype(op) ((op)&0xF)
+
 typedef struct node *Node;
 // 指针循环列表
 typedef struct _list *List;
@@ -83,6 +85,18 @@ typedef struct _table *Table;
 
 // 常量、标号、全局变量、参数或局部变量
 enum { CONSTANTS = 1, LABELS, GLOBAL, PARAM, LOCAL };
+// 每个操作符的最后一个字符是来自类型定义列表的类型后缀
+enum {
+	F = FLOAT,
+	D = DOUBLE,
+	C = CHAR,
+	S = SHORT,
+	I = INT,
+	U = UNSIGNED,
+	P = POINTER,
+	V = VOID,
+	B = STRUCT
+};
 // 精确指明了符号在何处定义
 typedef struct coord {
 	// file域指明了包含该定义的文件的名字
@@ -186,7 +200,7 @@ extern char *stringn(const char *str, int len);
 extern char *stringd(long n);
 extern char *stringf(const char *, ...);
 
-enum{PERM=0,FUNC,STMT};
+enum { PERM = 0, FUNC, STMT };
 
 struct node {
 	short op;
@@ -254,7 +268,7 @@ extern Type btot(int, int);
 // 类型管理
 extern int eqtype(Type, Type, int);
 extern void rmtypes(int);
-extern void type_init(int,char* []);
+extern void type_init(int, char*[]);
 extern Type ptr(Type ty);
 extern Type deref(Type ty);
 extern Type array(Type, int, int);
@@ -267,6 +281,8 @@ extern Type newstruct(int op, char *tag);
 extern Field newfield(char *, Type, Type);
 extern Type promote(Type ty);
 extern Type compose(Type ty1, Type ty2);
+extern int ttob(Type);
+extern Type btot(int op);
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，
@@ -372,7 +388,7 @@ struct symbol {
 		 * 如果两个或更多个内部标号指向相同位置，
 		 * 则这些标号的equatedto域指向其中一个标号。
 		 */
-		// 结构和枚举类型
+		 // 结构和枚举类型
 		struct {
 			int label;
 			Symbol equatedto;

@@ -172,7 +172,11 @@ Type promote(Type ty) {
 	}
 	return ty;
 }
-// TODO
+/*
+	compose以两个兼容类型为参数，返回复合(composite)类型。
+	在结构上compose与eqtype相似，且在处理简单情况时也相似。
+
+*/
 Type compose(Type ty1, Type ty2) {
 	if (ty1 == ty2)
 		return ty1;
@@ -185,6 +189,7 @@ Type compose(Type ty1, Type ty2) {
 	case CONST:case VOLATILE:
 		return qual(ty1->op, compose(ty1->type, ty2->type));
 	case ARRAY:
+		// 	如果两个兼容的数组类型中有一个完全类型，则形成的新数组类型的大小等于完全类型的大小。
 		Type ty = compose(ty1->type, ty2->type);
 		if (ty1->size
 			&& (ty1->type->size&&ty2->size == 0 || ty1->size == ty2->size))
@@ -194,10 +199,26 @@ Type compose(Type ty1, Type ty2) {
 			return array(ty, ty2->size / ty2->type->size, ty2->align);
 		return array(ty, 0, 0);
 	case FUNCTION:
+		// 两个兼容的函数类型所形成的的复合类型的返回类型是这两个函数类型的返回类型的复合，
+		// 参数类型是相应参数类型的复合。而如果其中一个函数类型没有原型，则复合类型的原型来自于另一个函数类型。
+		// 数据结构List是指针列表，通过列表函数append和ltov对List进行操作。
 		Type *p1 = ty1->u.f.proto, *p2 = ty2->u.f.proto;
 		List tlist = NULL;
 		if (p1 == NULL&p2 == NULL)
 			return func(ty, NULL, 1);
+		if (p1&&p2 == NULL)
+			return func(ty, p2, ty1->u.f.oldstyle);
+		if (p2&&p1 == NULL)
+			return func(ty, p2, ty2->u.f.oldstyle);
+		for (; *p1&&*p2; p1++, p2++) {
+			Type ty = compose(unqual(*p1), unqual(*p2));
+			if (isconst(*p1) || isconst(*p2))
+				ty = qual(CONST, ty);
+			if (isvolatile(*p1) || isvolatile(*p2))
+				ty = qual(VOLATILE, ty);
+			tlist = append(ty, tlist);
+		}
+		return func(ty, (Type *)ltov(&tlist, PERM), 0);
 	}
 	
 
@@ -569,4 +590,39 @@ Type qual(int op, Type ty) {
 		ty = type(op, ty, ty->size, ty->align, NULL);
 	}
 	return ty;
+}
+/*
+	后端可能检查类型的size和align，但不能依赖于其他域。
+	后端必须能够将Type映射成类型后端。
+	类型后缀是类型操作符的子集。
+	ttob函数将类型映射为相应的类型后缀
+*/
+int ttob(Type ty) {
+	switch (ty->op) {
+	case CONST:case VOLATILE:case CONST+VOLATILE:
+		return ttob(ty->type);
+	case CHAR:case INT:case SHORT:case UNSIGNED:
+	case VOID:case FLOAT:case DOUBLE:
+		return ty->op;
+	case POINTER:case FUNCTION:
+		return POINTER;
+	case ARRAY:case STRUCT:case UNION:
+		return STRUCT;
+	case ENUM:
+		return INT;
+	}
+}
+/*
+	btot功能和ttob相反，将类型操作符或类型后缀op转换为满足optype(op)==ttob(btot(op))的类型。
+*/
+Type btot(int op) {
+	switch (optype(op)) {
+	case F:return floattype;
+	case D:return doubletype;
+	case C:return chartype;
+	case S:return shorttype;
+	case I:return inttype;
+	case U:return unsignedtype;
+	case P:return voidtype;
+	}
 }
