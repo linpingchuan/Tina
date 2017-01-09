@@ -632,3 +632,24 @@ Type btot(int op) {
 	case P:return voidtype;
 	}
 }
+/*
+	如果ty不包含函数类型或者包含的所有函数类型都有原型，hasproto返回1，否则返回0.
+	hasproto用于警告遗漏的原型说明。由于分析结构时将域的类型作为参数显式调用hasproto，
+	因此如果结构的某个域是函数指针，且函数没有原型，hasproto就不能发出警告信息。
+*/
+int hasproto(Type ty) {
+	if (ty == 0)
+		return 1;
+	switch (ty->op) {
+	case CONST:case VOLATILE:case CONST+VOLATILE:case POINTER:
+	case ARRAY:
+		return hasproto(ty->type);
+	case FUNCTION:
+		return hasproto(ty->type) && ty->u.f.proto;
+	case STRUCT:case UNION:
+	case VOID:case FLOAT:case ENUM:case INT:case UNSIGNED:
+		return 1;
+	}
+	assert(0);
+	return 0;
+}

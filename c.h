@@ -261,6 +261,7 @@ extern Symbol genident(int, Type, int);
 extern Symbol temporary(int, Type, int);
 extern Symbol temporary(int, Type);
 extern Symbol newtemp(int, int, int);
+
 // 为调试器生成标识符和符号表信息的交叉引用列表
 extern void use(Symbol, Coordinate);
 extern void locus(Table, Coordinate*);
@@ -284,6 +285,7 @@ extern Type promote(Type ty);
 extern Type compose(Type ty1, Type ty2);
 extern int ttob(Type);
 extern Type btot(int op);
+extern int hasproto(Type);
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，
