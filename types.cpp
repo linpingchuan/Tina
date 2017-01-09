@@ -653,3 +653,71 @@ int hasproto(Type ty) {
 	assert(0);
 	return 0;
 }
+/*
+	在调试诊断中，lcc显示类型的英文解释。
+	例如sprintf的类型(int sprintf(char*,char*,...)和类型char*(*strings)[10]分别显示为:
+	int function(char *,char *,...)
+	pointer to array 10 of pointer to char
+	printf风格的格式代码%t表示打印下一个Type参数，输出函数调用outtype函数完成对%t的处理:
+
+*/
+void outtype(Type ty, FILE *f) {
+	switch (ty->op) {
+	case CONST+VOLATILE:case CONST:case VOLATILE:
+		fprint(f, "%k %t", ty->op, ty->type);
+		break;
+	case STRUCT:case UNION:case ENUM:
+		assert(ty->u.sym);
+		if (ty->size == 0)
+			fprint(f, "incomplete");
+		assert(ty->u.sym->name);
+		if (*ty->u.sym->name >= '1'&&*ty->u.sym->name <= '9') {
+			Symbol p = findtype(ty);
+			if (p == 0)
+				fprint(f, "%k defined at %w", ty->op, &ty->u.sym->src);
+			else
+				fprint(f, p->name);
+		}
+		else {
+			fprint(f, "%k %s", ty->op, ty->u.sym->name);
+			if (ty->size == 0)
+				fprint(f, " defined at %w", &ty->u.sym->src);
+		}
+		break;
+	case VOID:case FLOAT:case INT:case UNSIGNED:
+		fprint(f, ty->u.sym->name);
+		break;
+	case POINTER:
+		fprint(f, "pointer to %t", ty->type);
+		break;
+	case FUNCTION:
+		fprint(f, "%t function", ty->type);
+		if (ty->u.f.proto&&ty->u.f.proto[0]) {
+			int i;
+			fprint(f, "(%t", ty->u.f.proto[0]);
+			for (i = 1; ty->u.f.proto[i]; i++)
+				if (ty->u.f.proto[i] == voidtype)
+					fprint(f, ",...");
+				else
+					fprint(f, "%t", ty->u.f.proto[i]);
+			fprint(f, ")");
+		}
+		else if (ty->u.f.proto&&ty->u.f.proto[0] == 0)
+			fprint(f, "(void)");
+		break;
+	case ARRAY:
+		if (ty->size > 0 && ty->type&&ty->type->size > 0) {
+			fprint(f, "array %d", ty->size / ty->type->size);
+			while (ty->type&&isarray(ty->type) && ty->type->type->size > 0) {
+				ty = ty->type;
+				fprint(f, "%d", ty->size / ty->type->size);
+			}
+		}
+		else
+			fprint(f, "incomplete array");
+		if (ty->type)
+			fprint(f, " of %t", ty->type);
+		break;
+	default: assert(0);
+	}
+}

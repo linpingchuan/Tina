@@ -261,12 +261,15 @@ extern Symbol genident(int, Type, int);
 extern Symbol temporary(int, Type, int);
 extern Symbol temporary(int, Type);
 extern Symbol newtemp(int, int, int);
-
+extern Symbol findtype(Type);
 // 为调试器生成标识符和符号表信息的交叉引用列表
 extern void use(Symbol, Coordinate);
 extern void locus(Table, Coordinate*);
 
-extern Type btot(int, int);
+
+extern void fprint(FILE *f, const char *fmt, ...);
+
+
 // 类型管理
 extern int eqtype(Type, Type, int);
 extern void rmtypes(int);
@@ -278,6 +281,7 @@ extern Type func(Type ty, Type *proto, int style);
 extern Type atop(Type);
 extern Type qual(int op, Type ty);
 extern Type freturn(Type);
+
 extern int variadic(Type);
 extern Type newstruct(int op, char *tag);
 extern Field newfield(char *, Type, Type);
@@ -285,7 +289,9 @@ extern Type promote(Type ty);
 extern Type compose(Type ty1, Type ty2);
 extern int ttob(Type);
 extern Type btot(int op);
+extern Type btot(int, int);
 extern int hasproto(Type);
+extern void outtype(Type, FILE *);
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，

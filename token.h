@@ -37,7 +37,9 @@ enum {
 	xx(CONST, 15, 0, 0, 0, CHAR, "const")
 	xx(VOLATILE, 16, 0, 0, 0, CHAR, "volatile")
 
-	xx(STATIC,81,0,0,0,STATIC,"static")
+	xx(STATIC, 81, 0, 0, 0, STATIC, "static")
+	xx(SWITCH, 82, 0, 0, 0, IF, "switch")
+	xx(TYPEDEF, 83, 0, 0, 0, STATIC, "typedef")
 #undef xx
 #undef yy
 	LAST

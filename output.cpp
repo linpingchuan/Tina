@@ -6,3 +6,7 @@ char *stringf(const char *fmt, ...) {
 	char buf[1024];
 	return string(buf);
 }
+
+void fprint(FILE *f, const char *fmt, ...) {
+
+}

@@ -412,3 +412,19 @@ void locus(Table tp, Coordinate *cp) {
 	loci = append(cp, loci);
 	symbols = append(allsymbols(tp), symbols);
 }
+/*
+	find type ty in identifiers
+*/
+Symbol findtype(Type ty) {
+	Table tp = identifiers;
+	int i;
+	struct entry *p;
+	assert(tp);
+	do
+		for (i = 0; i < HASHSIZE; i++)
+			for (p = tp->buckets[i]; p; p = p->link)
+				if (p->sym.type == ty&&p->sym.sclass == TYPEDEF)
+					return &p->sym;
+	while ((tp = tp->previous) != NULL);
+	return NULL;
+}
