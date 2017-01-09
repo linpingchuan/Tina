@@ -292,6 +292,8 @@ extern Type btot(int op);
 extern Type btot(int, int);
 extern int hasproto(Type);
 extern void outtype(Type, FILE *);
+extern void printdecl(Symbol p, Type ty);
+extern char *typestring(Type ty, char *id);
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，

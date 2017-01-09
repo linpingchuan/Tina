@@ -36,7 +36,8 @@ enum {
 	xx(LONG, 14, 0, 0, 0, CHAR, "long")
 	xx(CONST, 15, 0, 0, 0, CHAR, "const")
 	xx(VOLATILE, 16, 0, 0, 0, CHAR, "volatile")
-
+	xx(AUTO, 67, 0, 0, 0, STATIC, "auto")
+	xx(EXTERN, 74, 0, 0, 0, STATIC, "extern")
 	xx(STATIC, 81, 0, 0, 0, STATIC, "static")
 	xx(SWITCH, 82, 0, 0, 0, IF, "switch")
 	xx(TYPEDEF, 83, 0, 0, 0, STATIC, "typedef")

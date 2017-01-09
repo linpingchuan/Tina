@@ -721,3 +721,26 @@ void outtype(Type ty, FILE *f) {
 	default: assert(0);
 	}
 }
+/*
+	函数格式化和打印类型
+	printdecl假设函数p具有类型ty(通常ty等于p->type),打印p的声明
+*/
+void printdecl(Symbol p, Type ty) {
+	switch (p->sclass) {
+	case AUTO:
+		fprint(stderr, "%s;\n", typestring(ty, p->name));
+		break;
+	case STATIC:case EXTERN:
+		fprint(stderr, "%k %s;\n", p->sclass, typestring(ty, p->name));
+	case TYPEDEF:case ENUM:
+		break;
+	default:assert(0);
+	}
+}
+/*
+	TODO
+*/
+char *typestring(Type ty, char *id) {
+	assert(0);
+	return 0;
+}
