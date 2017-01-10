@@ -60,7 +60,7 @@ void rmtypes(int lev) {
   如果两个类型兼容，eqtype函数返回1，反之返回0.
   如果ty1或ty2是不完全类型，则eqtype返回第三个参数ret的值。
   每个类型总是与自身兼容。
-  
+
 
  */
 int eqtype(Type ty1, Type ty2, int ret) {
@@ -79,17 +79,17 @@ int eqtype(Type ty1, Type ty2, int ret) {
 		return 0;
 	/*
 		1.指针类型：如果两个指针类型引用的类型兼容，则指针类型兼容;
-		
+
 		2.非限定类型：如果两个相似的限定类型的非限定类型，则它们也兼容;
-		
+
 		3.数组类型：如果其中一个数组为不完全类型，eqtype返回ret，否则它们的类型仍兼容。
 				   当eqtype递归调用自身时，ret总为1，在别处调用时ret通常也为1.
 				   一些操作符，如指针比较，要求操作数要么都是不完全类型，要么都是完全类型，
 				   这时eqtype的调用参数ret等于0.
 				   上面代码中的第一个测试时处理两个数组的大小都是位置的情况.
-		
+
 		4.函数类型：如果两个函数类型的返回类型和原型都兼容，那么这两个函数类型都兼容。
-				   
+
 	*/
 	switch (ty1->op) {
 	case ENUM:case UNION:case STRUCT:
@@ -97,7 +97,7 @@ int eqtype(Type ty1, Type ty2, int ret) {
 		return 0;
 	case POINTER:
 		return eqtype(ty1->type, ty2->type, 1);
-	case CONST:case VOLATILE:case CONST+VOLATILE:
+	case CONST:case VOLATILE:case CONST + VOLATILE:
 		return eqtype(ty1->type, ty2->type, 1);
 	case ARRAY:
 		if (eqtype(ty1->type, ty2->type, 1)) {
@@ -184,7 +184,7 @@ Type compose(Type ty1, Type ty2) {
 	switch (ty1->op) {
 	case POINTER:
 		return ptr(compose(ty1->type, ty2->type));
-	case CONST+VOLATILE:
+	case CONST + VOLATILE:
 		return qual(CONST, qual(VOLATILE, compose(ty1->type, ty2->type)));
 	case CONST:case VOLATILE:
 		return qual(ty1->op, compose(ty1->type, ty2->type));
@@ -224,9 +224,9 @@ Type compose(Type ty1, Type ty2) {
 		}
 		return func(ty, (Type *)ltov(&tlist, PERM), 0);
 	}
-		
+
 	}
-	
+
 
 	assert(0);
 	return NULL;
@@ -407,8 +407,8 @@ Type deref(Type ty) {
 	f.proto指向以空指针(null)结尾的Type数组。
 	f.proto[i]是第i+1个参数的类型。
 	因为旧风格的函数类型可能带原型，需要f.oldstyle标记。
-	
-    -------------------------------------------------------------------
+
+	-------------------------------------------------------------------
 
 	func函数创建类型（FUNCTION ty{proto}),ty是返回值类型，花括号括住的是圆形。
 	func初始化原型和old-style标记。
@@ -487,10 +487,10 @@ Type newstruct(int op, char *tag) {
 
 			+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		*/
-		if ((p = lookup(tag, types)) != NULL 
+		if ((p = lookup(tag, types)) != NULL
 			&& (p->scope == level
-			|| p->scope == PARAM
-			&&level == PARAM + 1)) {
+				|| p->scope == PARAM
+				&&level == PARAM + 1)) {
 			if (p->type->op == op && !p->defined)
 				return p->type;
 			error("redefinition of '%s' previously defined at %w\n", p->name, &p->src);
@@ -605,7 +605,7 @@ Type qual(int op, Type ty) {
 */
 int ttob(Type ty) {
 	switch (ty->op) {
-	case CONST:case VOLATILE:case CONST+VOLATILE:
+	case CONST:case VOLATILE:case CONST + VOLATILE:
 		return ttob(ty->type);
 	case CHAR:case INT:case SHORT:case UNSIGNED:
 	case VOID:case FLOAT:case DOUBLE:
@@ -641,7 +641,7 @@ int hasproto(Type ty) {
 	if (ty == 0)
 		return 1;
 	switch (ty->op) {
-	case CONST:case VOLATILE:case CONST+VOLATILE:case POINTER:
+	case CONST:case VOLATILE:case CONST + VOLATILE:case POINTER:
 	case ARRAY:
 		return hasproto(ty->type);
 	case FUNCTION:
@@ -663,7 +663,7 @@ int hasproto(Type ty) {
 */
 void outtype(Type ty, FILE *f) {
 	switch (ty->op) {
-	case CONST+VOLATILE:case CONST:case VOLATILE:
+	case CONST + VOLATILE:case CONST:case VOLATILE:
 		fprint(f, "%k %t", ty->op, ty->type);
 		break;
 	case STRUCT:case UNION:case ENUM:
@@ -749,7 +749,7 @@ char *typestring(Type ty, char *str) {
 	for (; ty; ty = ty->type) {
 		Symbol p;
 		switch (ty->op) {
-		case CONST+VOLATILE:case CONST:case VOLATILE:
+		case CONST + VOLATILE:case CONST:case VOLATILE:
 			if (isptr(ty->type))
 				str = stringf("%k %s", ty->op, str);
 			else
@@ -823,4 +823,30 @@ void printproto(Symbol p, Symbol callee[]) {
 				list = append(callee[i]->type, list);
 		printdecl(p, func(freturn(p->type), (Type *)ltov(&list, PERM), 0));
 	}
+}
+/*
+	如果名字在flist是个field,
+	返回指向field结构体的指针
+*/
+static Field isfield(const char* name, Field flist) {
+	for (; flist; flist = flist->link)
+		if (flist->name == name)
+			break;
+	return flist;
+}
+/*
+	搜索ty的域列表，查找name指定的域，
+	返回指向field结构的指针。
+	如果没有名为name的域，返回NULL。
+*/
+Field fieldref(char *name, Type ty) {
+	Field p = isfield(name, unqual(ty)->u.sym->u.s.flist);
+	if (p&&xref) {
+		Symbol q;
+		assert(unqual(ty)->u.sym->u.s.ftab);
+		q = lookup(name, unqual(ty)->u.sym->u.s.ftab);
+		assert(q);
+		use(q, src);
+	}
+	return p;
 }

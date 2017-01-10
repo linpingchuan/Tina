@@ -296,6 +296,7 @@ extern void printdecl(Symbol, Type);
 extern void printproto(Symbol, Symbol[]);
 extern char *typestring(Type, char *);
 
+extern Field fieldref(char *name, Type ty);
 /**
  * type结构体保存了变量，函数，常量，结构，联合和枚举等类型信息
  * 输出对type节点的声明可以展示Type的内部信息，
