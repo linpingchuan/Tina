@@ -805,3 +805,22 @@ char *typestring(Type ty, char *str) {
 	assert(0);
 	return 0;
 }
+/*
+	printproto打印函数p的说明，p的参数由args给出。
+	printproto使用args创建参数类型，调用printdecl，
+	printdecl再调用typestring.
+*/
+void printproto(Symbol p, Symbol callee[]) {
+	if (p->type->u.f.proto)
+		printdecl(p, p->type);
+	else {
+		int i;
+		List list = 0;
+		if (callee[0] == 0)
+			list = append(voidtype, list);
+		else
+			for (i = 0; callee[i]; i++)
+				list = append(callee[i]->type, list);
+		printdecl(p, func(freturn(p->type), (Type *)ltov(&list, PERM), 0));
+	}
+}
