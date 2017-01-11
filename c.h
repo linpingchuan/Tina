@@ -140,6 +140,50 @@ typedef struct metrics {
 	unsigned char size, align, outofline;
 }Metrics;
 
+typedef struct {
+	unsigned char max_unaligned_load;
+	Symbol(*rmp)(int);
+	void(*blkfetch)(int size, int off, int reg, int tmp);
+	void(*blkstore)(int size, int off, int reg, int tmp);
+	void(*blkloop)(int dreg, int doff, int sreg, int soff, int size, int tmps[]);
+	void(*_label)(Node);
+	int(*_rule)(void*, int);
+	short **_string;
+	char **_templates;
+	char *_isinstruction;
+	char **_ntname;
+	void(*emit2)(Node);
+	void(*doarg)(Node);
+	void(*target)(Node);
+	void(*colbber)(Node);
+}Xinterface;
+
+/*
+	ptrmetric描述所有类型的指针。
+	structmetric.align指定结构的最小对齐字节数，
+	结构的最大对齐字节数就是它的各个域的对齐字节数和structmetric.align的最大值。
+	只有某种类型的常量的值可以作为立即操作数出现在指令中时，
+	编译器后端才将其类型度量的outofline标记置为0.
+
+	--------------------------------------------------
+
+	字符的大小和对齐的字节数都必须为1.
+	前端可以正确地将符号整数，无符号整数和长整数作为不同类型处理，
+	但是他们都共享intmetric。
+	同样，double和long double类型共享double metric。
+	每个指针必须能够存放在一个无符号整数中。
+
+	--------------------------------------------------
+
+	x域是对interface的扩展，后端使用它存放与目标及其相关的接口数据和函数。对后端是私有的.
+
+	--------------------------------------------------
+
+	如果接口标志位wants_dag为0,
+	则前端生成显式的临时变量以保存那些被多次使用的公共子表达式。
+	前端设置这些临时变量符号的u.t.cse域，
+	u.t.cse可作为dag节点，计算所保存的值。
+*/
 typedef struct interface {
 	Metrics charmetric;
 	Metrics shortmetric;
@@ -162,6 +206,8 @@ typedef struct interface {
 
 	void(*defsymbol)(Symbol);
 	void(*local)(Symbol);
+
+	Node(*gen)(Node);
 }Interface;
 
 typedef struct {
@@ -402,9 +448,18 @@ struct symbol {
 	unsigned temporary : 1;
 	unsigned generated : 1;
 	unsigned defined : 1;
-
+	/* 对于变量和常量，type域用于后端查询数据项的数据类型后缀 */
 	Type type;
+	/* 
+		对于变量和标号，
+		ref域的浮点值用于估计变量和标号被引用的次数，
+		非零的值表示变量或标号至少被引用1次。
+	*/
 	float ref;
+	/*
+		对于标号，常量和某些变量，
+		联合u的域补充说明了一些额外的数据
+	*/
 	union {
 		/**
 		 * 如果两个或更多个内部标号指向相同位置，
