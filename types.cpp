@@ -50,7 +50,16 @@ void rmtypes(int lev) {
 		maxlevel = 0;
 		for (i = 0; i < NELEMS(typetable); i++) {
 			struct entry *tn, **tq = &typetable[i];
-			// TODO
+			while ((tn = *tq) != NULL)
+				if (tn->type.op == FUNCTION)
+					tq = &tn->link;
+				else if (tn->type.u.sym&&tn->type.u.sym->scope >= lev)
+					*tq = tn->link;
+				else {
+					if (tn->type.u.sym&&tn->type.u.sym->scope > maxlevel)
+						maxlevel = tn->type.u.sym->scope;
+					tq = &tn->link;
+				}
 		}
 	}
 }

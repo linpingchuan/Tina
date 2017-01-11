@@ -128,6 +128,14 @@ typedef struct {
 	unsigned short typeno;
 	void *xt;
 }Xtype;
+/*
+	类型度量(type metric)制定基本类型的大小和对齐字节数
+	outofline标记控制相关类型的常量的位置。
+	如果outofline为1，则该类型的常量不能出现在dag中，
+	而是存在一个匿名的静态变量。
+	对常量值的访问可通过对静态变量的存取获得。
+
+*/
 typedef struct metrics {
 	unsigned char size, align, outofline;
 }Metrics;
