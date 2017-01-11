@@ -183,6 +183,10 @@ typedef struct {
 	则前端生成显式的临时变量以保存那些被多次使用的公共子表达式。
 	前端设置这些临时变量符号的u.t.cse域，
 	u.t.cse可作为dag节点，计算所保存的值。
+
+	--------------------------------------------------
+
+	临时变量
 */
 typedef struct interface {
 	Metrics charmetric;
@@ -494,6 +498,12 @@ struct symbol {
 		}f;
 		int seg;
 		Symbol alias;
+		/*
+			如果接口标志wants_dag为0,
+			则前端生成显式的临时变量以保存那些使用多次的公共子表达式。
+			前端设置这些临时变量符号的u.t.cse域，
+			u.t.cse可作为dag节点，计算所保存的值。
+		*/
 		struct {
 			Node cse;
 			int replace;
