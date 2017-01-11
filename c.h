@@ -525,6 +525,11 @@ struct symbol {
 			Symbol next;
 		}t;
 	}u;
+	/*
+		符号包含类型为Xsymbol的x域，
+		用于存放后端存放符号中与目标机器相关的数据。
+		如局部变量的栈偏移量。
+	*/
 	Xsymbol x;
 };
 
