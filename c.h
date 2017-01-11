@@ -449,6 +449,11 @@ struct symbol {
 	unsigned structarg : 1;
 	unsigned addressed : 1;
 	unsigned computed : 1;
+	/* 
+		临时变量的temporary域和generated域都置为1，
+		而标号和其他生成的变量，
+		如存放字符串文字的变量，只有generated置为1时,structarg标识结构参数。
+	*/
 	unsigned temporary : 1;
 	unsigned generated : 1;
 	unsigned defined : 1;
@@ -468,6 +473,9 @@ struct symbol {
 		/**
 		 * 如果两个或更多个内部标号指向相同位置，
 		 * 则这些标号的equatedto域指向其中一个标号。
+		 * ----------------------------------------
+		 * 标号的scope域等于LABELS，u.l.label是一个唯一标识该标号的数值，
+		 * name是值的字符串的表示。标号没有type或sclass。
 		 */
 		 // 结构和枚举类型
 		struct {
@@ -486,6 +494,13 @@ struct symbol {
 		struct {
 			Value min, max;
 		}limits;
+		/*
+			常量的scope域等于CONSTANTS，sclass等于STATIC
+			对于整形或指针常量，name是C常量的字符串表示。
+			对其他类型，name没有定义。
+			常量的实际值存放在u.c.v域中。
+			如果需要生成一个变量来存放常量，那么u.c.loc指向该常量的符号表入口。
+		*/
 		struct {
 			Value v;
 			Symbol loc;
