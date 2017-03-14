@@ -8,6 +8,6 @@ import org.junit.Test
 class VMTest {
   @Test
   def run(): Unit ={
-    println("I love Tina")
+
   }
 }

@@ -6,3 +6,20 @@ package com.moon
 class VM {
 
 }
+
+object VM{
+  def main(args: Array[String]) {
+    loveTina
+  }
+
+  /**
+    * 我爱Tina
+    */
+  def loveTina(): Unit ={
+    println("********************************")
+    println("**                            **")
+    println("** Life is short,I Love Tina. **")
+    println("**                            **")
+    println("********************************")
+  }
+}
