@@ -37,9 +37,12 @@ object AppConfig {
   val T_Float = 19
   val T_int = 20
   val T_void = 21
+  // 左花括号
   val Left_Brace = 22
+  // 右花括号
   val Right_Brace = 23
   val T_Equal = 24
+  // 冒号
   val T_Semicolon = 25
   val T_Return = 26
   val T_Add = 27

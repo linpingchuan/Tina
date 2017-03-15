@@ -9,7 +9,7 @@ class VM {
 
 object VM{
   def main(args: Array[String]) {
-    loveTina
+    bootstrap()
   }
 
   /**
@@ -21,5 +21,9 @@ object VM{
     println("** Life is short,I Love Tina. **")
     println("**                            **")
     println("********************************")
+  }
+
+  def bootstrap(): Unit ={
+    loveTina
   }
 }
