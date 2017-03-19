@@ -1,5 +1,9 @@
 package com.moon.stream.impl
 
+import java.util
+import java.util.Objects
+
+import com.moon.state.TinaState
 import com.moon.stream.TinaStream
 
 /**
@@ -19,6 +23,8 @@ case class StringStream(data: String) extends TinaStream {
 
   var markDepth: Int = 0
 
+  var markers:util.List[TinaState]
+
   override def consume(): Unit = {
     if (p < size) {
       charPositionInLine += 1
@@ -26,20 +32,37 @@ case class StringStream(data: String) extends TinaStream {
         line += 1
         charPositionInLine = 0
       }
-      p+=1
+      p += 1
     }
   }
 
-  override def mark(): Int = ???
+  override def mark(): Int = {
+    if(Objects.isNull(markers)){
+      markers=new util.ArrayList[TinaState]
+      markers.add(null)
+    }
+    markDepth += 1
 
-  override def lookAhead(index: Int): Int = {
-    if(index == 0)
-      0
   }
 
-  override def seek(index: Int): Unit = ???
+  override def lookAhead(index: Int): Int = index match {
+    case zero if index == 0 => 0
+    case lowerZero if (index < 0) && ((p + index) < 0) => TinaStream.EOF
+    case greaterN if ((p + index - 1) >= size) => TinaStream.EOF
+    case _ => data.charAt(p + index - 1)
+  }
 
-  override def index(): Int = ???
+  override def seek(index: Int): Unit = {
+    if (index <= p) {
+      p = index
+    } else {
+      while (p < index) {
+        consume()
+      }
+    }
+  }
+
+  override def index(): Int = p
 
   /**
     * 重置输入流
@@ -51,7 +74,7 @@ case class StringStream(data: String) extends TinaStream {
     markDepth = 0
   }
 
-  override def lookAheadType(index: Int): Int = ???
+  override def lookAheadType(index: Int): Int = lookAhead(index)
 
   override def release(marker: Int): Unit = ???
 }
