@@ -1,0 +1,5 @@
+
+love t=23
+love p=23
+
+print t+p

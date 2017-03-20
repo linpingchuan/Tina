@@ -1,0 +1,14 @@
+
+-- I love Tina forever...
+love to(t,p){
+    int forever=-46;
+    {
+        return t+p+forever;
+    }
+    return t+p;
+}
+
+int t=23;
+int p=23;
+
+print(to(t,p))
