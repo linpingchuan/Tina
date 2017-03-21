@@ -29,14 +29,29 @@ case class TinaLexer(src: String) extends Lexer {
           consume()
           return new TinaToken("+", AppConfig.ADD)
         }
+        case letter if isLetter() =>{
+          return letters()
+        }
         case num if isNumber() => {
           return number()
         }
+
       }
     }
     new TinaToken("<EOF>", AppConfig.EOF)
   }
 
+  def letters():TinaToken={
+    def append(buf:StringBuilder):StringBuilder=ch match{
+      case letter if isLetter() => {
+        buf.append(ch)
+        consume()
+        append(buf)
+      }
+      case _ => buf
+    }
+    new TinaToken(append(new StringBuilder).toString(),AppConfig.VARIABLE)
+  }
 
   def isNumber(): Boolean = {
     ch match {
