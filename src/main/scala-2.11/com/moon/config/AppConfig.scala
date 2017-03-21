@@ -6,7 +6,7 @@ package com.moon.config
   */
 object AppConfig {
   val tokenNames:Array[String]=Array(
-    "n\a","VAR","love","+","print",","
+    "n/a","VAR","Int","+","print",","
   )
   val EOF= -1
   val VARIABLE=1
