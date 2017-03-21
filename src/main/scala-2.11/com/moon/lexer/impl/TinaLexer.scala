@@ -3,7 +3,7 @@ package com.moon.lexer.impl
 import com.moon.config
 import com.moon.config.AppConfig
 import com.moon.lexer.Lexer
-import com.moon.token.TinaToken
+import com.moon.token.{TinaTokenException, TinaToken}
 
 /**
   * Created by lin on 3/14/17.
@@ -35,7 +35,7 @@ case class TinaLexer(src: String) extends Lexer {
         case num if isNumber() => {
           return number()
         }
-
+        case _ => throw new TinaTokenException("could not found any legal token.")
       }
     }
     new TinaToken("<EOF>", AppConfig.EOF)
@@ -53,19 +53,21 @@ case class TinaLexer(src: String) extends Lexer {
     new TinaToken(append(new StringBuilder).toString(),AppConfig.VARIABLE)
   }
 
-  def isNumber(): Boolean = {
-    ch match {
-      case num if ch >= '0' && ch <= '9' => true
-      case space if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == AppConfig.EOF.toChar => false
-      case _ => throw new RuntimeException("expected number or space but found " + ch)
-    }
+
+  def isNumber():Boolean=ch match{
+    case num if ch >= '0' && ch <= '9' => true
+    case _ => false
   }
 
-
   def number(): TinaToken = {
-
+    def isNum(): Boolean =
+      ch match {
+        case num if ch >= '0' && ch <= '9' => true
+        case space if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == AppConfig.EOF.toChar => false
+        case _ => throw new RuntimeException("expected number or space but found " + ch)
+      }
     def add(result:Int): Int = ch match {
-      case num if isNumber() => {
+      case num if isNum() => {
         val sum =  result* 10 + (ch.toInt - '0'.toInt)
         consume()
         add(sum)

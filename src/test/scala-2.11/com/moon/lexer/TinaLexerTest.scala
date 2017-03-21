@@ -26,4 +26,14 @@ class TinaLexerTest {
     val letter=lexer.nextToken()
     println(letter)
   }
+
+  /**
+    * 非法字符测试
+    */
+  @Test
+  def testEOF(): Unit ={
+    val lexer=new TinaLexer("-=")
+    val eof=lexer.nextToken()
+    println(eof)
+  }
 }
