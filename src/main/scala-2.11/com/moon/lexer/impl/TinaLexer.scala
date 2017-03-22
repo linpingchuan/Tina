@@ -29,6 +29,10 @@ case class TinaLexer(src: String) extends Lexer {
           consume()
           return new TinaToken("+", AppConfig.ADD)
         }
+        case '=' => {
+          consume()
+          return new TinaToken("=",AppConfig.EQUALS)
+        }
         case letter if isLetter() =>{
           return letters()
         }
@@ -50,7 +54,7 @@ case class TinaLexer(src: String) extends Lexer {
       }
       case _ => buf
     }
-    new TinaToken(append(new StringBuilder).toString(),AppConfig.VARIABLE)
+    new TinaToken(append(new StringBuilder).toString(),AppConfig.NAME)
   }
 
 
