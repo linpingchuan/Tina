@@ -42,7 +42,7 @@ class TinaLexerTest {
   @Test
   def testAll(): Unit = {
     val lexer = new TinaLexer(" t=23 p=23 love\n" +
-      "=t+p")
+      "=t+p print love 8+")
     def printToken(token: TinaToken): Unit = token match {
       case notEof if token.tinaType != AppConfig.EOF => {
         println(token)
