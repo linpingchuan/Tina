@@ -22,8 +22,8 @@ case class TinaLexer(src: String) extends Lexer {
   /**
     * 重定向字符流
     */
-  def restart(): Unit ={
-    index=0
+  def restart(): Unit = {
+    index = 0
     consume()
   }
 
@@ -65,7 +65,13 @@ case class TinaLexer(src: String) extends Lexer {
       }
       case _ => buf
     }
-    new TinaToken(append(new StringBuilder).toString(), AppConfig.NAME)
+    val content = append(new StringBuilder).toString()
+
+    content match {
+      case love if AppConfig.tokenNames(AppConfig.LOVE).equals(content)  => new TinaToken(AppConfig.tokenNames(AppConfig.LOVE), AppConfig.LOVE)
+      case _ => new TinaToken(content, AppConfig.NAME)
+    }
+
   }
 
 
@@ -112,6 +118,7 @@ case class TinaLexer(src: String) extends Lexer {
 
   /**
     * 返回tokens
+    *
     * @return
     */
   def tokens(): Seq[TinaToken] = {
