@@ -11,8 +11,16 @@ import org.junit.Test
 class TinaParserTest {
   @Test
   def testVarDeclarations(): Unit ={
-    val lexer=new TinaLexer("love a,b")
+    val lexer=new TinaLexer("love a,,")
     val parser=new TinaParser(lexer,new SymbolTable)
-    
+    println(parser.speculateVarDeclaration())
+    println(parser.index)
+  }
+
+  @Test
+  def testRemoveIndex(): Unit ={
+    val list=List("1","3")
+    val (start,_::end)=list.splitAt(1)
+    println(start:::end)
   }
 }
