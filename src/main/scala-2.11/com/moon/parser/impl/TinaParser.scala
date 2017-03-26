@@ -4,7 +4,7 @@ import java.lang.Exception
 
 import com.moon.config.AppConfig
 import com.moon.lexer.impl.TinaLexer
-import com.moon.symbol.impl.SymbolTable
+import com.moon.symbol.impl.{TinaLove, VariableSymbol, SymbolTable}
 import com.moon.token.TinaToken
 
 import scala.annotation.tailrec
@@ -44,7 +44,7 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
     def matchVarDeclarations(): Boolean = try {
       matchToken(AppConfig.COMMA)
       try {
-        matchToken(AppConfig.NAME)
+        defVarToken(matchToken(AppConfig.NAME))
       } catch {
         case e: MismatchedTokenException => {
           throw new MismatchedVarNameException(e.getMessage)
@@ -55,7 +55,6 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
       true
     } catch {
       case e: MismatchedTokenException => {
-        e.printStackTrace()
         false
       }
     }
@@ -65,8 +64,13 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
       case _ => false
     }
 
+    def defVarToken(token:TinaToken): Unit ={
+      val vs=new VariableSymbol(token.input.toString,new TinaLove)
+      symtab.define(vs)
+    }
+
     matchToken(AppConfig.LOVE)
-    matchToken(AppConfig.NAME)
+    defVarToken(matchToken(AppConfig.NAME))
     recursiveMatch(matchVarDeclarations)
   }
 
@@ -141,8 +145,12 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
     lookahead(i + index - 1)
   }
 
-  def matchToken(x: Int): Unit = x match {
-    case eqType if lookaheadToken(1).tinaType == x => consume()
+  def matchToken(x: Int): TinaToken = x match {
+    case eqType if lookaheadToken(1).tinaType == x =>{
+      val token=lookaheadToken(1)
+      consume()
+      token
+    }
     case _ => throw new MismatchedTokenException("expecting " + AppConfig.tokenNames(x) + " found " + lookaheadToken(1).input)
   }
 }

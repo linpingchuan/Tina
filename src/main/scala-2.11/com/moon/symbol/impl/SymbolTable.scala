@@ -15,9 +15,7 @@ case class SymbolTable() extends TinaScope{
 
 
   def initTypeSystem(): Unit ={
-    globals.define(new BuiltInTypeSymbol("int"))
-    globals.define(new BuiltInTypeSymbol("float"))
-    globals.define(new BuiltInTypeSymbol("void"))
+    globals.define(new BuiltInTypeSymbol("love"))
   }
 
   override def toString: String = globals.toString

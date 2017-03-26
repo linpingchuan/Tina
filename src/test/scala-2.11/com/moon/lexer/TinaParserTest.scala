@@ -11,10 +11,11 @@ import org.junit.Test
 class TinaParserTest {
   @Test
   def testVarDeclarations(): Unit ={
-    val lexer=new TinaLexer("love a,,")
+    val lexer=new TinaLexer("love a,b")
     val parser=new TinaParser(lexer,new SymbolTable)
     println(parser.speculateVarDeclaration())
     println(parser.index)
+    println(parser.symtab.symbols)
   }
 
   @Test
