@@ -19,7 +19,8 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
   var lookahead = List[TinaToken]()
   // 当前向前看词法单元的下标
   var index: Int = 0
-
+  // 是否在进行演绎
+  var isNotSpeculated: Boolean = _
   sync(1)
 
   def compilationUnit(): Unit = {
@@ -28,6 +29,7 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
 
   def speculateVarDeclaration(): Boolean = {
     var success = true
+    isNotSpeculated = false
     mark()
 
     success = varDeclaration()
@@ -38,7 +40,9 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
 
   /**
     * 变量声明应该符合以下格式:
-    * love a[,b]
+    * love a 或者 love a,b
+    *
+    * @return
     */
   def varDeclaration(): Boolean = {
     def matchVarDeclarations(): Boolean = try {
@@ -64,18 +68,40 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
       case _ => false
     }
 
-    def defVarToken(token:TinaToken): Unit ={
-      val vs=new VariableSymbol(token.input.toString,new TinaLove)
-      symtab.define(vs)
-    }
-
     matchToken(AppConfig.LOVE)
+
     defVarToken(matchToken(AppConfig.NAME))
     recursiveMatch(matchVarDeclarations)
   }
 
+  def defVarToken(token: TinaToken): Unit = {
+    if (isNotSpeculated){
+      val vs = new VariableSymbol(token.input.toString, new TinaLove)
+      symtab.define(vs)
+    }
+  }
+  /**
+    * 变量定义格式
+    * love a=b
+    * love [a,b,c]=[e,f,g]
+    * a=b
+    * [a,b,c]=[e,f,g]
+    */
   def varAssignment(): Unit = {
 
+    def recursiveAssignment():Boolean={
+      false
+    }
+    @tailrec
+    def recursiveMatch(f:()=>Boolean): Unit =f() match{
+      case true => recursiveMatch(f)
+      case false => Unit
+    }
+
+    matchToken(AppConfig.LOVE)
+    defVarToken(matchToken(AppConfig.NAME))
+    
+    recursiveMatch(recursiveAssignment)
   }
 
   def expression(): Unit = {
@@ -146,8 +172,8 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
   }
 
   def matchToken(x: Int): TinaToken = x match {
-    case eqType if lookaheadToken(1).tinaType == x =>{
-      val token=lookaheadToken(1)
+    case eqType if lookaheadToken(1).tinaType == x => {
+      val token = lookaheadToken(1)
       consume()
       token
     }
