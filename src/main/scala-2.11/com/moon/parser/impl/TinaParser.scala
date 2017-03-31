@@ -88,9 +88,24 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
     * [a,b,c]=[e,f,g]
     */
   def varAssignment(): Unit = {
+    def assignment():Unit={
+      defVarToken(matchToken(AppConfig.NAME))
+      defVarToken(matchToken(AppConfig.EQUALS))
+      defVarToken(matchToken(AppConfig.NAME))
+    }
 
     def recursiveAssignment():Boolean={
-      false
+      var flag:Boolean=false
+      try{
+        defVarToken(matchToken(AppConfig.COMMA))
+        flag=true
+      }catch{
+        case e:MismatchedTokenException => flag=false
+      }
+      if(flag){
+        assignment()
+      }
+      flag
     }
     @tailrec
     def recursiveMatch(f:()=>Boolean): Unit =f() match{
@@ -99,10 +114,11 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
     }
 
     matchToken(AppConfig.LOVE)
-    defVarToken(matchToken(AppConfig.NAME))
-    
+    assignment()
     recursiveMatch(recursiveAssignment)
   }
+
+
 
   def expression(): Unit = {
 

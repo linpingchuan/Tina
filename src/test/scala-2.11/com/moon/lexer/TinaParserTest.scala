@@ -27,4 +27,14 @@ class TinaParserTest {
     val (start,_::end)=list.splitAt(1)
     println(start:::end)
   }
+
+  @Test
+  def testVarAssignment(): Unit ={
+    val lexer=new TinaLexer("love a=b,c=d")
+    val parser=new TinaParser(lexer,new SymbolTable)
+    parser.isNotSpeculated=true
+    println(parser.varAssignment())
+    println(parser.index)
+    println(parser.symtab.symbols)
+  }
 }
