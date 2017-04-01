@@ -6,7 +6,7 @@ package com.moon.config
   */
 object AppConfig {
   val tokenNames:Array[String]=Array(
-    "n/a","NAME","Int","+","print",",","=","love"
+    "n/a","NAME","Int","+","print",",","=","love","[","]"
   )
   val EOF= -1
   val NAME=1
@@ -16,4 +16,6 @@ object AppConfig {
   val COMMA=5
   val EQUALS=6
   val LOVE=7
+  val LEFT_BRACKET=8
+  val RIGHT_BRACKET=9
 }

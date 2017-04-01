@@ -80,12 +80,53 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
       symtab.define(vs)
     }
   }
+
+  /**
+    * 多变量定义格式
+    * love [a,b,c]=[e,f,g]
+    *
+    * [a,b,c]=[e,f,g]
+    */
+  def varsAssignment():Unit={
+    def matchComma():Boolean={
+      try{
+        defVarToken(matchToken(AppConfig.COMMA))
+        true
+      }catch{
+        case e:MismatchedTokenException => false
+      }
+    }
+
+    def matchTokenComma(f:()=>Boolean):Unit=f() match{
+      case true => {
+        defVarToken(matchToken(AppConfig.NAME))
+        matchTokenComma(f)
+      }
+      case false => Unit
+    }
+
+    /**
+      * [a,b]
+      */
+    def vars():Unit={
+      defVarToken(matchToken(AppConfig.LEFT_BRACKET))
+      defVarToken(matchToken(AppConfig.NAME))
+      matchTokenComma(matchComma)
+      defVarToken(matchToken(AppConfig.RIGHT_BRACKET))
+    }
+
+    defVarToken(matchToken(AppConfig.LOVE))
+    vars()
+    defVarToken(matchToken(AppConfig.EQUALS))
+    vars()
+  }
+
   /**
     * 变量定义格式
     * love a=b
-    * love [a,b,c]=[e,f,g]
+    *
     * a=b
-    * [a,b,c]=[e,f,g]
+    *
     */
   def varAssignment(): Unit = {
     def assignment():Unit={
