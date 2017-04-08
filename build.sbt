@@ -1,4 +1,4 @@
-name := "BK-tree"
+name := "Tina"
 
 version := "1.0"
 

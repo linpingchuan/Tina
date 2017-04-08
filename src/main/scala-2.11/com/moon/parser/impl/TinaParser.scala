@@ -90,7 +90,7 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
   def varsAssignment():Unit={
     def matchComma():Boolean={
       try{
-        defVarToken(matchToken(AppConfig.COMMA))
+        matchToken(AppConfig.COMMA)
         true
       }catch{
         case e:MismatchedTokenException => false
@@ -109,15 +109,15 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
       * [a,b]
       */
     def vars():Unit={
-      defVarToken(matchToken(AppConfig.LEFT_BRACKET))
+      matchToken(AppConfig.LEFT_BRACKET)
       defVarToken(matchToken(AppConfig.NAME))
       matchTokenComma(matchComma)
-      defVarToken(matchToken(AppConfig.RIGHT_BRACKET))
+      matchToken(AppConfig.RIGHT_BRACKET)
     }
 
-    defVarToken(matchToken(AppConfig.LOVE))
+    matchToken(AppConfig.LOVE)
     vars()
-    defVarToken(matchToken(AppConfig.EQUALS))
+    matchToken(AppConfig.EQUALS)
     vars()
   }
 
@@ -131,14 +131,14 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
   def varAssignment(): Unit = {
     def assignment():Unit={
       defVarToken(matchToken(AppConfig.NAME))
-      defVarToken(matchToken(AppConfig.EQUALS))
+      matchToken(AppConfig.EQUALS)
       defVarToken(matchToken(AppConfig.NAME))
     }
 
     def recursiveAssignment():Boolean={
       var flag:Boolean=false
       try{
-        defVarToken(matchToken(AppConfig.COMMA))
+        matchToken(AppConfig.COMMA)
         flag=true
       }catch{
         case e:MismatchedTokenException => flag=false
