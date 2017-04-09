@@ -40,7 +40,7 @@ class TinaParserTest {
 
   @Test
   def testVarsAssignment(): Unit ={
-    val lexer=new TinaLexer("love [a2,b,c,d]=[e2,f,g,h]")
+    val lexer=new TinaLexer("love [a12332,b,c,d]=[e,f,g,h]")
     val parser=new TinaParser(lexer,new SymbolTable)
     parser.isNotSpeculated=true
     println(parser.varsAssignment())

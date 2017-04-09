@@ -64,9 +64,12 @@ case class TinaLexer(src: String) extends Lexer {
   }
 
   def letters(): TinaToken = {
+    def isValidLetter():Boolean={
+      ch>='a'&&ch<='z'||ch>='A'&&ch<='Z'||ch>='1'&&ch<='9'
+    }
     @tailrec
     def append(buf: StringBuilder): StringBuilder = ch match {
-      case letter if isLetter() => {
+      case letter if isValidLetter() => {
         buf.append(ch)
         consume()
         append(buf)
@@ -75,9 +78,16 @@ case class TinaLexer(src: String) extends Lexer {
     }
     val content = append(new StringBuilder).toString()
 
+    // 检测是否为内置关键字
     content match {
-      case love if AppConfig.tokenNames(AppConfig.LOVE).equals(content)  => new TinaToken(AppConfig.tokenNames(AppConfig.LOVE), AppConfig.LOVE)
-      case _ => new TinaToken(content, AppConfig.NAME)
+      case love if AppConfig.tokenNames(AppConfig.LOVE).equals(content)  =>
+        new TinaToken(AppConfig.tokenNames(AppConfig.LOVE), AppConfig.LOVE)
+
+      case method if AppConfig.tokenNames(AppConfig.METHOD_DECL).equals(content) =>
+        new TinaToken(AppConfig.tokenNames(AppConfig.METHOD_DECL),AppConfig.METHOD_DECL)
+
+      case _ =>
+        new TinaToken(content, AppConfig.NAME)
     }
 
   }

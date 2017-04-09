@@ -159,9 +159,11 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
     recursiveMatch(recursiveAssignment)
   }
 
-
-
-  def expression(): Unit = {
+  /**
+    * 方法定义实现
+    */
+  def methodDefinition(): Unit ={
+    matchToken(AppConfig.METHOD_DECL)
 
   }
 
