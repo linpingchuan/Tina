@@ -1,5 +1,7 @@
 package com.moon.tree
 
+import scala.collection.mutable.ListBuffer
+
 /**
   * Created by Lin on 17/4/9.
   */
@@ -25,4 +27,12 @@ trait Tree {
   def setChild(i:Int,t:Tree)
 
   def setChildIndex(index:Int)
+
+  def getLine():Int
+
+  def getCharPositionInLine():Int
+
+  def getAncestors():ListBuffer[Tree]
+
+  def getAncestor(ttype:Int):Tree
 }

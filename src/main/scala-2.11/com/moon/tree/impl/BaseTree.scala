@@ -32,7 +32,21 @@ class BaseTree extends Tree{
   override def toStringTree(): String = {
     if(Objects.isNull(children)||children.isEmpty)
       return this.toString
-
+    val buf=new StringBuilder
+    if(!isNil()){
+      buf.append("(")
+      buf.append(this.toString)
+      buf.append(' ')
+    }
+    for(i <- 0 until children.size){
+      val t=children(i)
+      if(i>0)
+        buf.append(' ')
+      buf.append(t.toStringTree())
+    }
+    if(!isNil())
+      buf.append(')')
+    buf.toString
   }
 
   override def addChild(t: Tree): Unit = {
@@ -69,4 +83,24 @@ class BaseTree extends Tree{
   override def setParent(t: Tree): Unit = ???
 
   override def setChildIndex(index: Int): Unit = ???
+
+  override def getLine(): Int = ???
+
+  override def getCharPositionInLine(): Int = ???
+
+  override def getAncestors(): ListBuffer[Tree] = getParent() match{
+    case null => null
+    case _ => {
+      val ancestors=ListBuffer[Tree]()
+      var t:Tree=this
+      t=t.getParent()
+      while(Objects.nonNull(t)){
+        ancestors.insert(0,t)
+        t=t.getParent()
+      }
+      ancestors
+    }
+  }
+
+  override def getAncestor(ttype: Int): Tree = ???
 }
