@@ -5,6 +5,8 @@ import com.moon.parser.impl.TinaParser
 import com.moon.symbol.impl.SymbolTable
 import org.junit.Test
 
+import scala.collection.mutable.ListBuffer
+
 /**
   * Created by lin on 3/25/17.
   */
@@ -53,5 +55,12 @@ class TinaParserTest {
     for (i <- 1 to 1){
       println(i)
     }
+  }
+
+  @Test
+  def testListBuffer(): Unit ={
+    var list=ListBuffer[String]("1","2","3","4","5")
+    list+= "6"
+    println(list)
   }
 }

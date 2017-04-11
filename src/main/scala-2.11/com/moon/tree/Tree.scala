@@ -35,4 +35,12 @@ trait Tree {
   def getAncestors():ListBuffer[Tree]
 
   def getAncestor(ttype:Int):Tree
+
+  def freshParentAndChildIndexes()
+
+  def freshParentAndChildIndexes(offset:Int)
+
+  def getType():Int
+
+  def hasAncestor(ttype:Int):Boolean
 }
