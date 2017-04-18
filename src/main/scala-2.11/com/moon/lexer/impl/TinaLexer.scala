@@ -31,6 +31,14 @@ case class TinaLexer(src: String) extends Lexer {
     while (ch != AppConfig.EOF.toChar) {
       ch match {
         case space if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' => consume()
+        case '{' =>{
+          consume()
+          return new TinaToken("{",AppConfig.LEFT_BRACE)
+        }
+        case '}' =>{
+          consume()
+          return new TinaToken("}",AppConfig.RIGHT_BRACE)
+        }
         case ',' => {
           consume()
           return new TinaToken(",", AppConfig.COMMA)
@@ -50,6 +58,14 @@ case class TinaLexer(src: String) extends Lexer {
         case ']' =>{
           consume()
           return new TinaToken("]",AppConfig.RIGHT_BRACKET)
+        }
+        case '(' =>{
+          consume()
+          return new TinaToken("(",AppConfig.LEFT_PARENTHESIS)
+        }
+        case ')' =>{
+          consume()
+          return new TinaToken(")",AppConfig.RIGHT_PARENTHESIS)
         }
         case letter if isLetter() => {
           return letters()

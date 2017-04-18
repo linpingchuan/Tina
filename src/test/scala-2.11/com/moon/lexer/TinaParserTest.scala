@@ -2,6 +2,8 @@ package com.moon.lexer
 
 import com.moon.lexer.impl.TinaLexer
 import com.moon.parser.impl.TinaParser
+import com.moon.scope.TinaScope
+import com.moon.scope.impl.GlobalScope
 import com.moon.symbol.impl.SymbolTable
 import org.junit.Test
 
@@ -47,9 +49,19 @@ class TinaParserTest {
     parser.isNotSpeculated=true
     println(parser.varsAssignment())
     println(parser.index)
-    println(parser.symtab.symbols)
+    parser.symtab.symbols.foreach(x=>println(x))
   }
 
+  @Test
+  def testMethodDefinition():Unit={
+    val methodDecl=new TinaLexer("tina with()")
+
+    val methodDefLexer=new TinaLexer("tina love():Unit={}")
+
+    val methodDeclParser=new TinaParser(methodDecl,new SymbolTable)
+    val scope:TinaScope=GlobalScope()
+    methodDeclParser.methodDefinition(scope)
+  }
   @Test
   def testTo1(): Unit ={
     for (i <- 1 to 1){

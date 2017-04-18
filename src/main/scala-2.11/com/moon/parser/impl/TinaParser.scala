@@ -4,8 +4,10 @@ import java.lang.Exception
 
 import com.moon.config.AppConfig
 import com.moon.lexer.impl.TinaLexer
-import com.moon.symbol.impl.{TinaLove, VariableSymbol, SymbolTable}
+import com.moon.scope.TinaScope
+import com.moon.symbol.impl.{SymbolTable, TinaLove, VariableSymbol}
 import com.moon.token.TinaToken
+import com.moon.tp.impl.NameType
 
 import scala.annotation.tailrec
 
@@ -159,11 +161,18 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
     recursiveMatch(recursiveAssignment)
   }
 
+
   /**
     * 方法定义实现
     */
-  def methodDefinition(): Unit ={
+  def methodDefinition(scope:TinaScope): Unit ={
+    def matchMethodName(token:TinaToken): Unit ={
+      matchToken(AppConfig.LEFT_PARENTHESIS)
+
+      matchToken(AppConfig.RIGHT_PARENTHESIS)
+    }
     matchToken(AppConfig.METHOD_DECL)
+    matchMethodName(matchToken(AppConfig.NAME))
 
   }
 
