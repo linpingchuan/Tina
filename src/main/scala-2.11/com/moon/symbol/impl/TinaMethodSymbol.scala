@@ -11,8 +11,8 @@ import scala.collection.mutable
 /**
   * Created by lin on 3/14/17.
   */
-class TinaMethodSymbol(nm: String, retType: TinaType, enclosingScope: TinaScope) extends TinaSymbol(nm, retType) with TinaScope {
-  val orderedArgs = new mutable.LinkedHashMap[String, TinaSymbol]()
+class TinaMethodSymbol(nm: String, retType: Int, enclosingScope: TinaScope) extends TinaSymbol(nm, retType) with TinaScope {
+  var orderedArgs = Map[String, TinaSymbol]()
 
   /**
     * 获取当前作用域的名称

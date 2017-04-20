@@ -4,7 +4,7 @@ import com.moon.lexer.impl.TinaLexer
 import com.moon.parser.impl.TinaParser
 import com.moon.scope.TinaScope
 import com.moon.scope.impl.GlobalScope
-import com.moon.symbol.impl.SymbolTable
+import com.moon.symbol.impl.{SymbolTable, TinaMethodSymbol}
 import org.junit.Test
 
 import scala.collection.mutable.ListBuffer
@@ -54,13 +54,15 @@ class TinaParserTest {
 
   @Test
   def testMethodDefinition():Unit={
-    val methodDecl=new TinaLexer("tina with()")
+    val methodDecl=new TinaLexer("tina with(a)")
 
     val methodDefLexer=new TinaLexer("tina love():Unit={}")
 
     val methodDeclParser=new TinaParser(methodDecl,new SymbolTable)
     val scope:TinaScope=GlobalScope()
     methodDeclParser.methodDefinition(scope)
+    println(methodDeclParser.funtable.symbols)
+    println(methodDeclParser.funtable.symbols.head._2.asInstanceOf[TinaMethodSymbol].orderedArgs)
   }
   @Test
   def testTo1(): Unit ={

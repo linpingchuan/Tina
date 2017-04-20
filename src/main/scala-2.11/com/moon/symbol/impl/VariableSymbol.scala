@@ -6,7 +6,7 @@ import com.moon.tp.TinaType
 /**
   * Created by lin on 3/14/17.
   */
-class VariableSymbol(nm:String, tp:TinaType) extends TinaSymbol(nm,tp) {
+class VariableSymbol(nm:String, tp:Int) extends TinaSymbol(nm,tp) {
   override def toString: String = "[tp.getName() => "+nm+" ]"
 }
 

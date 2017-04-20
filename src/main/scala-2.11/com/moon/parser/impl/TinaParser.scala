@@ -1,13 +1,12 @@
 package com.moon.parser.impl
 
-import java.lang.Exception
-
 import com.moon.config.AppConfig
 import com.moon.lexer.impl.TinaLexer
 import com.moon.scope.TinaScope
-import com.moon.symbol.impl.{SymbolTable, TinaLove, VariableSymbol}
+import com.moon.scope.impl.{GlobalScope, MethodScope}
+import com.moon.symbol.TinaSymbol
+import com.moon.symbol.impl.{SymbolTable, TinaLove, TinaMethodSymbol, VariableSymbol}
 import com.moon.token.TinaToken
-import com.moon.tp.impl.NameType
 
 import scala.annotation.tailrec
 
@@ -23,6 +22,9 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
   var index: Int = 0
   // 是否在进行演绎
   var isNotSpeculated: Boolean = _
+  // 函数表
+  var funtable = SymbolTable()
+  val globalScope = GlobalScope()
   sync(1)
 
   def compilationUnit(): Unit = {
@@ -64,6 +66,7 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
         false
       }
     }
+
     @tailrec
     def recursiveMatch(a: () => Boolean): Boolean = a() match {
       case true => recursiveMatch(a)
@@ -77,8 +80,8 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
   }
 
   def defVarToken(token: TinaToken): Unit = {
-    if (isNotSpeculated){
-      val vs = new VariableSymbol(token.input.toString, new TinaLove)
+    if (isNotSpeculated) {
+      val vs = new VariableSymbol(token.input.toString, AppConfig.LOVE)
       symtab.define(vs)
     }
   }
@@ -89,17 +92,17 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
     *
     * [a,b,c]=[e,f,g]
     */
-  def varsAssignment():Unit={
-    def matchComma():Boolean={
-      try{
+  def varsAssignment(): Unit = {
+    def matchComma(): Boolean = {
+      try {
         matchToken(AppConfig.COMMA)
         true
-      }catch{
-        case e:MismatchedTokenException => false
+      } catch {
+        case e: MismatchedTokenException => false
       }
     }
 
-    def matchTokenComma(f:()=>Boolean):Unit=f() match{
+    def matchTokenComma(f: () => Boolean): Unit = f() match {
       case true => {
         defVarToken(matchToken(AppConfig.NAME))
         matchTokenComma(f)
@@ -110,7 +113,7 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
     /**
       * [a,b]
       */
-    def vars():Unit={
+    def vars(): Unit = {
       matchToken(AppConfig.LEFT_BRACKET)
       defVarToken(matchToken(AppConfig.NAME))
       matchTokenComma(matchComma)
@@ -131,27 +134,28 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
     *
     */
   def varAssignment(): Unit = {
-    def assignment():Unit={
+    def assignment(): Unit = {
       defVarToken(matchToken(AppConfig.NAME))
       matchToken(AppConfig.EQUALS)
       defVarToken(matchToken(AppConfig.NAME))
     }
 
-    def recursiveAssignment():Boolean={
-      var flag:Boolean=false
-      try{
+    def recursiveAssignment(): Boolean = {
+      var flag: Boolean = false
+      try {
         matchToken(AppConfig.COMMA)
-        flag=true
-      }catch{
-        case e:MismatchedTokenException => flag=false
+        flag = true
+      } catch {
+        case e: MismatchedTokenException => flag = false
       }
-      if(flag){
+      if (flag) {
         assignment()
       }
       flag
     }
+
     @tailrec
-    def recursiveMatch(f:()=>Boolean): Unit =f() match{
+    def recursiveMatch(f: () => Boolean): Unit = f() match {
       case true => recursiveMatch(f)
       case false => Unit
     }
@@ -165,12 +169,34 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
   /**
     * 方法定义实现
     */
-  def methodDefinition(scope:TinaScope): Unit ={
-    def matchMethodName(token:TinaToken): Unit ={
-      matchToken(AppConfig.LEFT_PARENTHESIS)
+  def methodDefinition(scope: TinaScope): Unit = {
 
+    def matchMethodArgs(name:String): Unit = {
+      try {
+        val token = matchToken(AppConfig.NAME)
+        val methodScope = MethodScope(globalScope, token.input.asInstanceOf[String])
+
+        val variableSymbol = TinaSymbol(token.input.asInstanceOf[String], token.tinaType, methodScope)
+        val methodSymbol=funtable.symbols.apply(name).asInstanceOf[TinaMethodSymbol]
+          methodSymbol.orderedArgs=methodSymbol.orderedArgs + (token.input.asInstanceOf[String] -> variableSymbol)
+      } catch {
+        case e: MismatchedTokenException => {
+          e.printStackTrace()
+        }
+      }
+
+    }
+
+    def matchMethodName(token: TinaToken): Unit = {
+
+      val symbol = new TinaMethodSymbol(token.input.asInstanceOf[String], token.tinaType, globalScope)
+      funtable.symbols=funtable.symbols + (token.input.asInstanceOf[String] -> symbol)
+
+      matchToken(AppConfig.LEFT_PARENTHESIS)
+      matchMethodArgs(token.input.asInstanceOf[String])
       matchToken(AppConfig.RIGHT_PARENTHESIS)
     }
+
     matchToken(AppConfig.METHOD_DECL)
     matchMethodName(matchToken(AppConfig.NAME))
 

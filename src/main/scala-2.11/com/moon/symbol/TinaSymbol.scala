@@ -7,13 +7,13 @@ import com.moon.tp.TinaType
   * 所有的符号都至少有一个名字，并且知道它们的类型以及相应包含它们的作用域
   * Created by lin on 3/14/17.
   */
-case class TinaSymbol(name:String,tinaType:TinaType,var scope:TinaScope) {
+case class TinaSymbol(name:String,tinaType:Int,var scope:TinaScope) {
 
   def this(nm:String){
-    this(nm,null,null)
+    this(nm,0,null)
   }
 
-  def this(nm:String,tt:TinaType){
+  def this(nm:String,tt:Int){
     this(nm,tt,null)
   }
 
