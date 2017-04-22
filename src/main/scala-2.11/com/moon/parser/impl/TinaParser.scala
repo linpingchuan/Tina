@@ -167,30 +167,40 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
 
 
   /**
-    * 方法定义实现
+    * 方法声明
     */
-  def methodDefinition(scope: TinaScope): Unit = {
+  def methodDeclare(scope: TinaScope): Unit = {
 
-    def matchMethodArgs(name:String): Unit = {
+    def matchMethodArgs(name: String): Unit = {
+      var isRecursive=true
       try {
         val token = matchToken(AppConfig.NAME)
+        matchToken(AppConfig.COLON)
+        val tinaType=matchToken(AppConfig.LOVE)
         val methodScope = MethodScope(globalScope, token.input.asInstanceOf[String])
 
-        val variableSymbol = TinaSymbol(token.input.asInstanceOf[String], token.tinaType, methodScope)
-        val methodSymbol=funtable.symbols.apply(name).asInstanceOf[TinaMethodSymbol]
-          methodSymbol.orderedArgs=methodSymbol.orderedArgs + (token.input.asInstanceOf[String] -> variableSymbol)
+        val variableSymbol = TinaSymbol(token.input.asInstanceOf[String], tinaType.tinaType, methodScope)
+        val methodSymbol = funtable.symbols.apply(name).asInstanceOf[TinaMethodSymbol]
+        val arg = (token.input.asInstanceOf[String] -> variableSymbol)
+
+        methodSymbol.orderedArgs = methodSymbol.orderedArgs + arg
+
+        matchToken(AppConfig.COMMA)
       } catch {
         case e: MismatchedTokenException => {
           e.printStackTrace()
+          isRecursive=false
         }
       }
 
+      if(isRecursive)
+        matchMethodArgs(name)
     }
 
     def matchMethodName(token: TinaToken): Unit = {
 
       val symbol = new TinaMethodSymbol(token.input.asInstanceOf[String], token.tinaType, globalScope)
-      funtable.symbols=funtable.symbols + (token.input.asInstanceOf[String] -> symbol)
+      funtable.symbols = funtable.symbols + (token.input.asInstanceOf[String] -> symbol)
 
       matchToken(AppConfig.LEFT_PARENTHESIS)
       matchMethodArgs(token.input.asInstanceOf[String])

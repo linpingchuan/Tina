@@ -12,7 +12,12 @@ import scala.collection.mutable
   * Created by lin on 3/14/17.
   */
 class TinaMethodSymbol(nm: String, retType: Int, enclosingScope: TinaScope) extends TinaSymbol(nm, retType) with TinaScope {
+  // 参数
   var orderedArgs = Map[String, TinaSymbol]()
+  // 局部参数
+  var params=Map[String,TinaSymbol]()
+  // 语句
+  var statements=Map[String,TinaSymbol]()
 
   /**
     * 获取当前作用域的名称

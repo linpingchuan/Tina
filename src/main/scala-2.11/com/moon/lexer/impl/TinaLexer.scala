@@ -67,6 +67,10 @@ case class TinaLexer(src: String) extends Lexer {
           consume()
           return new TinaToken(")",AppConfig.RIGHT_PARENTHESIS)
         }
+        case ':' =>{
+          consume()
+          return new TinaToken(":",AppConfig.COLON)
+        }
         case letter if isLetter() => {
           return letters()
         }
