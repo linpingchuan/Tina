@@ -30,7 +30,11 @@ case class TinaLexer(src: String) extends Lexer {
   def nextToken(): TinaToken = {
     while (ch != AppConfig.EOF.toChar) {
       ch match {
-        case space if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' => consume()
+        case space if ch == ' ' || ch == '\t'  || ch == '\r' => consume()
+        case '\n' =>{
+          consume()
+          return new TinaToken("\n",AppConfig.NEXT_LINE)
+        }
         case '{' =>{
           consume()
           return new TinaToken("{",AppConfig.LEFT_BRACE)
@@ -105,6 +109,9 @@ case class TinaLexer(src: String) extends Lexer {
 
       case method if AppConfig.tokenNames(AppConfig.METHOD_DECL).equals(content) =>
         new TinaToken(AppConfig.tokenNames(AppConfig.METHOD_DECL),AppConfig.METHOD_DECL)
+
+      case main if AppConfig.tokenNames(AppConfig.MAIN).equals(content)=>
+        new TinaToken(AppConfig.tokenNames(AppConfig.MAIN),AppConfig.MAIN)
 
       case _ =>
         new TinaToken(content, AppConfig.NAME)

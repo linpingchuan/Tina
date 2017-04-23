@@ -54,13 +54,11 @@ class TinaParserTest {
 
   @Test
   def testMethodDefinition():Unit={
-    val methodDecl=new TinaLexer("tina with(a:love,b:love)")
+    val methodDecl=new TinaLexer("tina merry(a:love,b:love)={ println(a) }")
 
-    val methodDefLexer=new TinaLexer("tina love():Unit={}")
-
-    val methodDeclParser=new TinaParser(methodDecl,new SymbolTable)
+    val methodDeclParser=new TinaParser(methodDecl)
     val scope:TinaScope=GlobalScope()
-    methodDeclParser.methodDeclare(scope)
+    methodDeclParser.matchMethod(scope)
     println(methodDeclParser.funtable.symbols)
     println(methodDeclParser.funtable.symbols.head._2.asInstanceOf[TinaMethodSymbol].orderedArgs)
   }

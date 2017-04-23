@@ -27,6 +27,14 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
   val globalScope = GlobalScope()
   sync(1)
 
+  def this(lexer:TinaLexer){
+    this(lexer,SymbolTable())
+
+    val printMethod=new TinaMethodSymbol("println",0,globalScope)
+    printMethod.orderedArgs=printMethod.orderedArgs + ("name" -> TinaSymbol("name",AppConfig.LOVE,globalScope))
+    funtable.symbols=funtable.symbols + ("println" -> printMethod)
+
+  }
   def compilationUnit(): Unit = {
 
   }
@@ -166,10 +174,57 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
   }
 
 
+
   /**
     * 方法声明
     */
-  def methodDeclare(scope: TinaScope): Unit = {
+  def matchMethod(scope: TinaScope): Unit = {
+    def matchStatements(name:String,isNextLine:Boolean): Unit =isNextLine match{
+      case true =>{
+        val line=List[TinaSymbol]()
+        matchStatements(name,false)
+      }
+      case false =>{
+        val methodSymbol=funtable.symbols(name).asInstanceOf[TinaMethodSymbol]
+        var token:TinaToken= null
+        try{
+          // 函数调用语句
+          token=matchToken(AppConfig.NAME)
+          matchToken(AppConfig.LEFT_PARENTHESIS)
+          val definedMethod=funtable.symbols(token.input.asInstanceOf[String]).asInstanceOf[TinaMethodSymbol]
+
+          def matchArgs(symbol:TinaMethodSymbol,argIndex:Int,declareMethod:TinaMethodSymbol): Unit ={
+            val arg=matchToken(AppConfig.NAME)
+
+            try{
+              val argSymbol=declareMethod.orderedArgs(arg.input.asInstanceOf[String])
+              symbol.orderedArgs.take(argIndex).head._2.tinaType
+            }catch{
+              case e:Exception=>{
+                val argSymbol=declareMethod.params(arg.input.asInstanceOf[String])
+              }
+            }
+
+            try{
+              matchToken(AppConfig.COMMA)
+              matchArgs(symbol,argIndex+1,declareMethod)
+            }catch{
+              case e:MismatchedTokenException =>{}
+            }
+
+          }
+
+          matchArgs(definedMethod,0,methodSymbol)
+          matchToken(AppConfig.RIGHT_PARENTHESIS)
+        }catch{
+          case e:MismatchedTokenException =>{}
+        }
+
+
+        // 赋值语句
+
+      }
+    }
 
     def matchMethodArgs(name: String): Unit = {
       var isRecursive=true
@@ -188,13 +243,14 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
         matchToken(AppConfig.COMMA)
       } catch {
         case e: MismatchedTokenException => {
-          e.printStackTrace()
+//          e.printStackTrace()
           isRecursive=false
         }
       }
 
       if(isRecursive)
         matchMethodArgs(name)
+
     }
 
     def matchMethodName(token: TinaToken): Unit = {
@@ -207,9 +263,39 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
       matchToken(AppConfig.RIGHT_PARENTHESIS)
     }
 
-    matchToken(AppConfig.METHOD_DECL)
-    matchMethodName(matchToken(AppConfig.NAME))
+    def matchMethodBody(name:String): Unit ={
+      val methodSymbol=funtable.symbols(name).asInstanceOf[TinaMethodSymbol]
+      matchToken(AppConfig.EQUALS)
+      matchToken(AppConfig.LEFT_BRACE)
+      try{
+        matchStatements(name,true)
+      }catch{
+        case e:MismatchedTokenException =>{
 
+        }
+      }
+      matchToken(AppConfig.RIGHT_BRACE)
+    }
+
+    matchToken(AppConfig.METHOD_DECL)
+    var methodName:TinaToken= null
+    try{
+      methodName=matchToken(AppConfig.NAME)
+    }catch {
+      case e:MismatchedTokenException => {
+        methodName=matchToken(AppConfig.MAIN)
+      }
+    }
+
+
+    matchMethodName(methodName)
+
+    var isRecursive=true
+    try{
+      matchMethodBody(methodName.input.asInstanceOf[String])
+    }catch {
+      case e:MismatchedTokenException => { e.printStackTrace()}
+    }
   }
 
 

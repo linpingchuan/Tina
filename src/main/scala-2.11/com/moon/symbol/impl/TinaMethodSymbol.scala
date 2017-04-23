@@ -17,7 +17,7 @@ class TinaMethodSymbol(nm: String, retType: Int, enclosingScope: TinaScope) exte
   // 局部参数
   var params=Map[String,TinaSymbol]()
   // 语句
-  var statements=Map[String,TinaSymbol]()
+  var statements=List[List[TinaSymbol]]()
 
   /**
     * 获取当前作用域的名称
