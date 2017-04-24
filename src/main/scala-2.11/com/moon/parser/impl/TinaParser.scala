@@ -191,17 +191,45 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
           // 函数调用语句
           token=matchToken(AppConfig.NAME)
           matchToken(AppConfig.LEFT_PARENTHESIS)
+
           val definedMethod=funtable.symbols(token.input.asInstanceOf[String]).asInstanceOf[TinaMethodSymbol]
 
+          methodSymbol.statements.isEmpty match{
+            case true =>{
+              var statement=List[TinaSymbol]()
+              statement=statement:+definedMethod
+              methodSymbol.statements=methodSymbol.statements:+statement
+            }
+            case false =>{
+              var statement=methodSymbol.statements(methodSymbol.statements.size-1)
+              statement=statement:+definedMethod
+            }
+          }
+
+          /**
+            * 语句中，匹配函数参数中的各个函数类型
+            * @param symbol 宿主函数
+            * @param argIndex 函数的参数索引
+            * @param declareMethod 已经在函数表中声明的函数
+            */
           def matchArgs(symbol:TinaMethodSymbol,argIndex:Int,declareMethod:TinaMethodSymbol): Unit ={
             val arg=matchToken(AppConfig.NAME)
 
             try{
-              val argSymbol=declareMethod.orderedArgs(arg.input.asInstanceOf[String])
-              symbol.orderedArgs.take(argIndex).head._2.tinaType
+              // 寻找参数是否存在于函数参数中
+              val argName=symbol.orderedArgs(arg.input.asInstanceOf[String])
+              // 查看函数表的参数
+              val declareSymbol=declareMethod.orderedArgs.toList(argIndex)._2
+              declareSymbol.tinaType match{
+                case argName.tinaType => {
+                  println("+++++++++++++")
+                }
+                case _ => throw MismatchTypeException("expecting type "+AppConfig.tokenNames(declareSymbol.tinaType)+" but found "+argName.tinaType)
+              }
             }catch{
               case e:Exception=>{
-                val argSymbol=declareMethod.params(arg.input.asInstanceOf[String])
+                e.printStackTrace()
+//                val argSymbol=declareMethod.params(arg.input.asInstanceOf[String])
               }
             }
 
@@ -214,7 +242,7 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
 
           }
 
-          matchArgs(definedMethod,0,methodSymbol)
+          matchArgs(methodSymbol,0,definedMethod)
           matchToken(AppConfig.RIGHT_PARENTHESIS)
         }catch{
           case e:MismatchedTokenException =>{}
@@ -253,6 +281,10 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
 
     }
 
+    /**
+      * 匹配函数名字
+      * @param token
+      */
     def matchMethodName(token: TinaToken): Unit = {
 
       val symbol = new TinaMethodSymbol(token.input.asInstanceOf[String], token.tinaType, globalScope)
@@ -373,4 +405,5 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
 
 case class MismatchedTokenException(e: String) extends RuntimeException(e)
 
+case class MismatchTypeException(e:String) extends RuntimeException(e)
 class MismatchedVarNameException(es: String) extends MismatchedTokenException(es)
