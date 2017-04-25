@@ -222,7 +222,8 @@ case class TinaParser(lexer: TinaLexer, symtab: SymbolTable) {
               val declareSymbol=declareMethod.orderedArgs.toList(argIndex)._2
               declareSymbol.tinaType match{
                 case argName.tinaType => {
-                  println("+++++++++++++")
+                  // do nothing
+                  declareMethod.orderedArgs=declareMethod.orderedArgs+(arg.input.asInstanceOf[String]->argName)
                 }
                 case _ => throw MismatchTypeException("expecting type "+AppConfig.tokenNames(declareSymbol.tinaType)+" but found "+argName.tinaType)
               }

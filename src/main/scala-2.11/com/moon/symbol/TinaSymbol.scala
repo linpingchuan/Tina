@@ -8,7 +8,7 @@ import com.moon.tp.TinaType
   * Created by lin on 3/14/17.
   */
 case class TinaSymbol(name:String,tinaType:Int,var scope:TinaScope) {
-
+  var value:Any= _
   def this(nm:String){
     this(nm,0,null)
   }
