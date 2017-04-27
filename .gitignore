@@ -32,3 +32,10 @@ Debug
 *.opendb
 
 *.TMP
+
+project
+
+target
+
+.idea
+
