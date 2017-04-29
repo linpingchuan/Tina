@@ -1,0 +1,7 @@
+a=23
+b=24
+
+love tina(){
+    c=a+b
+    println(c)
+}
