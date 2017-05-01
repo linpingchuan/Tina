@@ -4,7 +4,7 @@ package tina
   * Created by Lin on 17/4/28.
   */
 case class TinaToken(name: Any, kind: Int, line: Int, pos: Int) {
-  override def toString: String = "name: "+name+" kind: "+TinaToken.tokenNames(kind)+" in line: "+line+" pos: "+pos
+  override def toString: String = "name: " + name + " kind: " + TinaToken.tokenNames(kind) + " in line: " + line + " pos: " + pos
 }
 
 case class MisMatchTokenException(e: String) extends RuntimeException(e)
@@ -34,18 +34,22 @@ object TinaToken {
   val SINGLE_QUOTATION = 21
   val CLASS = 22
   val COLON = 23
-  val VAR=24
+  val VAR = 24
+  val EQUAL=25
+  val FUNCTION=26
   val tokenNames = List[String](
     "int", "float", "(", ")", "{",
     "}", "tina", "love", "string", "+",
     "-", "*", "/", "while", "unit",
     "return", "for", "if", "else", "elif",
-    "\"", "'", "class", ":","var"
+    "\"", "'", "class", ":", "var",
+    "=","function"
   )
 }
 
 case class TinaLexer(src: Array[Char]) {
   var index: Int = 0
+  var lineIndex: Int = 0
   var inferIndexs: List[Int] = List[Int]()
 
   var isInfer: Boolean = false
@@ -64,25 +68,30 @@ case class TinaLexer(src: Array[Char]) {
       char match {
         case isSkip if (char == '\t' || char == ' ' || char == '\r') && (!isComment) => {
           index = index + 1
+          lineIndex = lineIndex + 1
           skip()
         }
         case isEscaped if char == '\\' => {
           if (index + 2 < src.size)
             index = index + 2
+          lineIndex = lineIndex + 2
           skip()
         }
         case isBeginComment if char == '/' && (index + 1) < src.size && src(index + 1) == '*' => {
           index = index + 2
+          lineIndex = lineIndex + 2
           isComment = true
           skip()
         }
         case isEndComment if isComment && char == '*' && (index + 1) < src.size && src(index + 1) == '/' => {
           index = index + 2
-          isComment=false
+          lineIndex = lineIndex + 2
+          isComment = false
           skip()
         }
-        case isInComment if isComment =>{
-          index=index+1
+        case isInComment if isComment => {
+          index = index + 1
+          lineIndex = lineIndex + 1
           skip()
         }
         case _ => {}
@@ -93,59 +102,117 @@ case class TinaLexer(src: Array[Char]) {
   }
 
   def isNumber(): Boolean = {
+    var result = false
     if (index < src.size) {
       val char = src(index)
       char match {
-        case isNum if char >= '0' && char <= '9' => true
-        case _ => false
-      }
-    }
-    false
-  }
-
-  def isLetter():Boolean={
-    var result=false
-    if(index<src.size){
-      val char=src(index)
-      char match{
-        case isTrue if (char>='a'&&char<='z')||(char>='A'&&char<='Z')||char=='_'||(char>='0'&&char<='9') =>result=true
-        case _ => result=false
+        case isNum if char >= '0' && char <= '9' => result = true
+        case _ => result = false
       }
     }
     result
   }
 
-  def nextLetters(token:TinaToken):TinaToken=isLetter()match{
+  def isLetter(): Boolean = {
+    var result = false
+    if (index < src.size) {
+      val char = src(index)
+      char match {
+        case isTrue if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || char == '_' || (char >= '0' && char <= '9') => result = true
+        case _ => result = false
+      }
+    }
+    result
+  }
+
+  def nextLetters(token: TinaToken): TinaToken = isLetter() match {
     case true => {
-      val name=token.name.asInstanceOf[String]+src(index)
-      if(name==TinaToken.tokenNames(TinaToken.IF)){
-        index=index+1
-        nextLetters(TinaToken(name,TinaToken.IF,line,token.pos+1))
-      }else{
-        index=index+1
-        nextLetters(TinaToken(name,TinaToken.VAR,line,token.pos+1))
+      val name = token.name.asInstanceOf[String] + src(index)
+      index = index + 1
+      lineIndex = lineIndex + 1
+      if (name == TinaToken.tokenNames(TinaToken.IF)) {
+        nextLetters(TinaToken(name, TinaToken.IF, line, token.pos + 1))
+      } else if (name == TinaToken.tokenNames(TinaToken.LOVE)) {
+        nextLetters(TinaToken(name, TinaToken.LOVE, line, token.pos + 1))
+      } else if (name == TinaToken.tokenNames(TinaToken.TINA)) {
+        nextLetters(TinaToken(name, TinaToken.TINA, line, token.pos + 1))
+      }
+      else if(src(index).toString==TinaToken.tokenNames(TinaToken.LEFT_PARENT)){
+        nextLetters(TinaToken(name, TinaToken.FUNCTION, line, token.pos + 1))
+      }
+      else {
+        nextLetters(TinaToken(name, TinaToken.VAR, line, token.pos + 1))
       }
     }
     case false => token
   }
 
-  def nextNumber(token: TinaToken): TinaToken = {
-    if (src(index) == '.' && token.kind == TinaToken.INT) {
-      index = index + 1
-      nextNumber(TinaToken(token.name.asInstanceOf[Float], TinaToken.FLOAT, token.line, token.pos + 1))
+  def nextNumber(token: TinaToken, dotNum: Int): TinaToken = {
+    var result = token
+    if (index < src.size) {
+      if (src(index) == '.' && token.kind == TinaToken.INT) {
+        index = index + 1
+        lineIndex = lineIndex + 1
+        result = nextNumber(TinaToken(token.name.asInstanceOf[Int].toDouble, TinaToken.FLOAT, token.line, token.pos + 1), dotNum)
+      }
+      else if (isNumber()) {
+        val int = src(index).toInt - '0'.toInt
+        index = index + 1
+        lineIndex = lineIndex + 1
+        if (token.kind == TinaToken.INT)
+          result = nextNumber(TinaToken(token.name.asInstanceOf[Int] * 10 + int, token.kind, token.line, token.pos + 1), dotNum)
+        else {
+
+          var dotResult = int.toDouble
+          for (i <- 0 to dotNum)
+            dotResult = dotResult / 10
+
+          result = nextNumber(TinaToken(token.name.asInstanceOf[Double] + dotResult, token.kind, token.line, token.pos + 1), dotNum + 1)
+
+        }
+      }
+      else if (src(index - 1) == '.' && token.kind == TinaToken.FLOAT)
+        throw MisMatchTokenException("expecting original type is int but found float.Is double dot in this number :) ")
     }
-    else if (src(index) == '.' && token.kind == TinaToken.FLOAT)
-      throw MisMatchTokenException("excepting original type is int but found float.Is double dot in this number :) ")
-    else if (isNumber()) {
-      val int = src(index).toInt - '0'.toInt
-      index = index + 1
-      nextNumber(TinaToken(token.name.asInstanceOf[Int] * 10 + int, token.kind, token.line, token.pos + 1))
-    } else
-      token
+    result
   }
 
+
+  def isSpecialLetter(): Boolean = {
+    var result = false
+    if(index<src.size){
+      val char=src(index)
+      char match{
+        case isSpecial if(char=='('||char==')'||char=='{'||char=='}') => result=true
+        case _ =>{}
+      }
+    }
+    result
+  }
+
+  def nextSpecialLetter():TinaToken=isSpecialLetter() match{
+    case true=>{
+      val name = src(index).toString
+      index = index + 1
+      lineIndex = lineIndex + 1
+      if (name == TinaToken.tokenNames(TinaToken.LEFT_PARENT)) {
+       TinaToken(name, TinaToken.LEFT_PARENT, line, lineIndex)
+      } else if (name == TinaToken.tokenNames(TinaToken.RIGHT_PARENT)) {
+        TinaToken(name, TinaToken.RIGHT_PARENT, line, lineIndex)
+      } else if (name == TinaToken.tokenNames(TinaToken.LEFT_BRACE)) {
+        TinaToken(name, TinaToken.LEFT_BRACE, line, lineIndex)
+      } else if (name == TinaToken.tokenNames(TinaToken.RIGHT_BRACE)) {
+        TinaToken(name, TinaToken.RIGHT_BRACE, line, lineIndex)
+      }else if(name==TinaToken.tokenNames(TinaToken.EQUAL)) {
+        TinaToken(name, TinaToken.EQUAL, line, lineIndex)
+      }
+      else
+        throw MisMatchTokenException("expecting special letter but not found")
+    }
+    case _ => throw MisMatchTokenException("expecting special letter but not found")
+  }
   def nextToken(): TinaToken = {
-    var token:TinaToken=null
+    var token: TinaToken = null
     if (isInfer)
       inferIndexs = index +: inferIndexs
 
@@ -154,25 +221,32 @@ case class TinaLexer(src: Array[Char]) {
       char match {
         case skipToken if char == '\t' || char == ' ' || char == '\r' || char == '/' => {
           skip()
-          val flag=isInfer
-          isInfer=false
-          token=nextToken()
-          isInfer=flag
+          val flag = isInfer
+          isInfer = false
+          token = nextToken()
+          isInfer = flag
         }
         case nextLine if char == '\n' => {
           inferIndexs = index +: inferIndexs
-          index = 0
+          lineIndex = 0
           line = line + 1
-          val flag=isInfer
-          isInfer=false
-          token=nextToken()
-          isInfer=flag
+          index = index + 1
+          val flag = isInfer
+          isInfer = false
+          token = nextToken()
+          isInfer = flag
         }
         case isNum if isNumber() => {
-          token=nextNumber(TinaToken('0'.toInt, TinaToken.INT, line, index-1))
+          token = nextNumber(TinaToken(0, TinaToken.INT, line, lineIndex - 1), 0)
         }
-        case isLetters if isLetter() =>{
-          token=nextLetters(TinaToken("",TinaToken.VAR,line,index))
+        case isLetters if isLetter() => {
+          token = nextLetters(TinaToken("", TinaToken.VAR, line, lineIndex))
+        }
+        case isSpecialLetters if isSpecialLetter() => {
+          token=nextSpecialLetter()
+        }
+        case _ => {
+          throw MisMatchTokenException(char + " can not match")
         }
       }
     }
@@ -180,7 +254,7 @@ case class TinaLexer(src: Array[Char]) {
 
     if (isInfer) {
       index = inferIndexs.head
-      inferIndexs=inferIndexs.slice(1, inferIndexs.size)
+      inferIndexs = inferIndexs.slice(1, inferIndexs.size)
     }
 
     token

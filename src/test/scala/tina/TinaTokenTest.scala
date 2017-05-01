@@ -9,8 +9,19 @@ import org.junit.Test
 class TinaTokenTest {
   @Test
   def testSkip(): Unit ={
-    val lexer=new TinaLexer("    /* i love my family */ a".toCharArray);
-    val token=lexer.nextToken()
-    println(token)
+    val lexer=new TinaLexer(("love tina(){\n" +
+      "println(c)}").toCharArray);
+    def printToken(lexer:TinaLexer): Unit ={
+      val token=lexer.nextToken()
+      token match{
+        case null => {}
+        case _ => {
+          println(token)
+          printToken(lexer)
+        }
+      }
+    }
+
+    printToken(lexer)
   }
 }
