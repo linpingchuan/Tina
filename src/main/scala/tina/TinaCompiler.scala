@@ -274,17 +274,24 @@ case class TinaLexer(src: Array[Char]) {
   }
 }
 
-case class TinaState(char){
+case class TinaState(char: Char, nextPos: Int, nextCount: Int, state: String) {
 
 }
-object TinaState{
-  val state1:List[TinaState]=List[TinaState](
 
+object TinaState {
+  val state1: List[TinaState] = List[TinaState](
+    TinaState('=', 0, 1, "=")
+  )
+
+  val state2: List[TinaState] = List[TinaState](
+    TinaState('=', 0, 0, "==")
   )
 }
-case class TinaStateMachine(){
+
+case class TinaStateMachine() {
 
 }
+
 case class TinaParser(lexer: TinaLexer) {
 
 }
