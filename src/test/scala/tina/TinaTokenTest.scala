@@ -22,6 +22,9 @@ class TinaTokenTest {
       }
     }
 
+   lexer.syn(20)
+    lexer.buffer.foreach( x => println(x))
+    println(lexer.inferIndexs)
     printToken(lexer)
   }
 }
