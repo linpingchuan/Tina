@@ -274,22 +274,45 @@ case class TinaLexer(src: Array[Char]) {
   }
 }
 
-case class TinaState(char: Char, nextPos: Int, nextCount: Int, state: String) {
+case class TinaState(char: Char, nextPos: Int, nextCount: Int,pos:Int, state: String) {
 
 }
 
 object TinaState {
   val state1: List[TinaState] = List[TinaState](
-    TinaState('=', 0, 1, "=")
+    TinaState('=', 0, 1,0, "="),
+    TinaState('>',0,2,0,">")
   )
 
   val state2: List[TinaState] = List[TinaState](
-    TinaState('=', 0, 0, "==")
+    TinaState('=', 0, 0,0, "=="),
+    TinaState('>',0,1,0,">>"),
+    TinaState('=',0,0,0,">=")
+  )
+  val state3:List[TinaState]=List[TinaState](
+    TinaState('=',0,0,0,">>=")
   )
 }
 
-case class TinaStateMachine() {
+case class TinaStateMachine(lexer:TinaLexer) {
 
+  def nextTinaState():TinaState={
+    def matchTinaState(group:Int,pos:Int,count:Int):TinaState={
+      val groupState=group match{
+        case 1 => TinaState.state1
+        case 2 => TinaState.state2
+        case 3 => TinaState.state3
+      }
+      for(i <- pos until pos+count if i<groupState.length){
+        if(lexer.src(lexer.index)==groupState(i).char){
+          if(groupState(i).nextCount)
+        }
+      }
+      null
+    }
+
+
+  }
 }
 
 case class TinaParser(lexer: TinaLexer) {
