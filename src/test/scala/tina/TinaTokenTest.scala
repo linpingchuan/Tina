@@ -28,3 +28,18 @@ class TinaTokenTest {
     printToken(lexer)
   }
 }
+
+class TinaStateMachineTest{
+  @Test
+  def testNextTinaState(): Unit ={
+    val lexer=TinaLexer(">>= ==".toCharArray)
+    val tinaStateMachine=TinaStateMachine(lexer)
+    val state=tinaStateMachine.nextTinaState()
+    println(state)
+    val state1=tinaStateMachine.nextTinaState()
+    println(state1)
+    lexer.index=lexer.index+1
+    val state2=tinaStateMachine.nextTinaState()
+    println(state2)
+  }
+}

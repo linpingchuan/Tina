@@ -281,7 +281,7 @@ case class TinaState(char: Char, nextPos: Int, nextCount: Int,pos:Int, state: St
 object TinaState {
   val state1: List[TinaState] = List[TinaState](
     TinaState('=', 0, 1,0, "="),
-    TinaState('>',0,2,0,">")
+    TinaState('>',1,2,0,">")
   )
 
   val state2: List[TinaState] = List[TinaState](
@@ -297,21 +297,28 @@ object TinaState {
 case class TinaStateMachine(lexer:TinaLexer) {
 
   def nextTinaState():TinaState={
-    def matchTinaState(group:Int,pos:Int,count:Int):TinaState={
+    def matchTinaState(group:Int,pos:Int,count:Int,state:TinaState):TinaState={
+
       val groupState=group match{
         case 1 => TinaState.state1
         case 2 => TinaState.state2
         case 3 => TinaState.state3
       }
-      for(i <- pos until pos+count if i<groupState.length){
+      for(i <- pos until pos+count if i<groupState.length&&lexer.index<lexer.src.length){
         if(lexer.src(lexer.index)==groupState(i).char){
-          if(groupState(i).nextCount)
+          lexer.index=lexer.index+1
+          if(groupState(i).nextCount>0){
+            return matchTinaState(group+1,groupState(i).nextPos,groupState(i).nextCount,groupState(i))
+          }else{
+            return groupState(i)
+          }
         }
+
       }
-      null
+      state
     }
 
-
+    matchTinaState(1,0,TinaState.state1.length,null)
   }
 }
 
