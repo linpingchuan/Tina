@@ -10,7 +10,7 @@ class TinaTokenTest {
   @Test
   def testSkip(): Unit ={
     val lexer=new TinaLexer(("love tina(){\n" +
-      "println(c)}").toCharArray);
+      "println(c) = }").toCharArray);
     def printToken(lexer:TinaLexer): Unit ={
       val token=lexer.nextToken()
       token match{

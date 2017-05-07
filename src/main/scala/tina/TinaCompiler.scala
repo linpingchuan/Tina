@@ -1,5 +1,7 @@
 package tina
 
+import java.util.Objects
+
 /**
   * Created by Lin on 17/4/28.
   */
@@ -41,13 +43,15 @@ object TinaToken {
   val VAR = 24
   val EQUAL = 25
   val FUNCTION = 26
+  val GREAT = 27
+  val LOW = 28
   val tokenNames: List[String] = List[String](
     "int", "float", "(", ")", "{",
     "}", "tina", "love", "string", "+",
     "-", "*", "/", "while", "unit",
     "return", "for", "if", "else", "elif",
     "\"", "'", "class", ":", "var",
-    "=", "function"
+    "=", "function", ">", "<"
   )
 }
 
@@ -179,23 +183,51 @@ case class TinaLexer(src: Array[Char]) {
     result
   }
 
-
+  /**
+    * 是否含有非字母的特殊符号
+    * @return
+    */
   def hasSpecialLetter(): Boolean = {
     var result = false
     if (index < src.length) {
       val char = src(index)
       char match {
-        case isSpecial if char == '(' || char == ')' || char == '{' || char == '}' => result = true
+        case isSpecial if
+        char == '(' || char == ')' || char == '{' || char == '}' ||
+          char == '>' || char == '<' || char=='='
+        => result = true
         case _ =>
       }
     }
     result
   }
 
+  /**
+    * 回退多少个位置
+    * @param length
+    */
+  def rollback(length:Int): Unit ={
+    index=index-length
+    lineIndex=lineIndex-length
+  }
+
+  /**
+    * 向前推进多少个位置
+    * @param length
+    */
+  def forward(length:Int): Unit ={
+    index=index+length
+    lineIndex=lineIndex+length
+  }
+
+  /**
+    * 下个特殊符号token
+    * @return
+    */
   def nextSpecialLetter(): TinaToken = if (hasSpecialLetter()) {
     val name = src(index).toString
-    index = index + 1
-    lineIndex = lineIndex + 1
+    val tinaMachine=TinaStateMachine(this)
+    forward(1)
     if (name == TinaToken.tokenNames(TinaToken.LEFT_PARENT)) {
       TinaToken(name, TinaToken.LEFT_PARENT, line, lineIndex)
     } else if (name == TinaToken.tokenNames(TinaToken.RIGHT_PARENT)) {
@@ -204,14 +236,27 @@ case class TinaLexer(src: Array[Char]) {
       TinaToken(name, TinaToken.LEFT_BRACE, line, lineIndex)
     } else if (name == TinaToken.tokenNames(TinaToken.RIGHT_BRACE)) {
       TinaToken(name, TinaToken.RIGHT_BRACE, line, lineIndex)
-    } else if (name == TinaToken.tokenNames(TinaToken.EQUAL)) {
-      TinaToken(name, TinaToken.EQUAL, line, lineIndex)
+    } else  {
+      rollback(1)
+      val state=tinaMachine.nextTinaState()
+      if (Objects.nonNull(state)){
+        forward(1)
+        if(state.state=="=")
+          TinaToken(name, TinaToken.EQUAL, line, lineIndex)
+        else
+          throw MisMatchTokenException("expecting special letter but not found")
+      }
+      else
+        throw MisMatchTokenException("expecting special letter but not found")
     }
-    else
-      throw MisMatchTokenException("expecting special letter but not found")
+
   }
   else throw MisMatchTokenException("expecting special letter but not found")
 
+  /**
+    * 下个token
+    * @return
+    */
   def nextToken(): TinaToken = {
     var token: TinaToken = null
     if (index < src.length) {
@@ -274,42 +319,51 @@ case class TinaLexer(src: Array[Char]) {
   }
 }
 
-case class TinaState(char: Char, nextPos: Int, nextCount: Int,pos:Int, state: String) {
+/**
+  * 状态描述
+  *
+  * @param char      状态符
+  * @param nextPos   下个状态开始位置
+  * @param nextCount 下个状态的状态大小
+  * @param pos       当前状态的位置
+  * @param state     状态描述
+  */
+case class TinaState(char: Char, nextPos: Int, nextCount: Int, pos: Int, state: String) {
 
 }
 
 object TinaState {
   val state1: List[TinaState] = List[TinaState](
-    TinaState('=', 0, 1,0, "="),
-    TinaState('>',1,2,0,">")
+    TinaState('=', 0, 1, 0, "="),
+    TinaState('>', 1, 2, 0, ">")
   )
 
   val state2: List[TinaState] = List[TinaState](
-    TinaState('=', 0, 0,0, "=="),
-    TinaState('>',0,1,0,">>"),
-    TinaState('=',0,0,0,">=")
+    TinaState('=', 0, 0, 0, "=="),
+    TinaState('>', 0, 1, 0, ">>"),
+    TinaState('=', 0, 0, 0, ">=")
   )
-  val state3:List[TinaState]=List[TinaState](
-    TinaState('=',0,0,0,">>=")
+  val state3: List[TinaState] = List[TinaState](
+    TinaState('=', 0, 0, 0, ">>=")
   )
 }
 
-case class TinaStateMachine(lexer:TinaLexer) {
+case class TinaStateMachine(lexer: TinaLexer) {
 
-  def nextTinaState():TinaState={
-    def matchTinaState(group:Int,pos:Int,count:Int,state:TinaState):TinaState={
+  def nextTinaState(): TinaState = {
+    def matchTinaState(group: Int, pos: Int, count: Int, state: TinaState): TinaState = {
 
-      val groupState=group match{
+      val groupState = group match {
         case 1 => TinaState.state1
         case 2 => TinaState.state2
         case 3 => TinaState.state3
       }
-      for(i <- pos until pos+count if i<groupState.length&&lexer.index<lexer.src.length){
-        if(lexer.src(lexer.index)==groupState(i).char){
-          lexer.index=lexer.index+1
-          if(groupState(i).nextCount>0){
-            return matchTinaState(group+1,groupState(i).nextPos,groupState(i).nextCount,groupState(i))
-          }else{
+      for (i <- pos until pos + count if i < groupState.length && lexer.index < lexer.src.length) {
+        if (lexer.src(lexer.index) == groupState(i).char) {
+          lexer.index = lexer.index + 1
+          if (groupState(i).nextCount > 0) {
+            return matchTinaState(group + 1, groupState(i).nextPos, groupState(i).nextCount, groupState(i))
+          } else {
             return groupState(i)
           }
         }
@@ -318,9 +372,10 @@ case class TinaStateMachine(lexer:TinaLexer) {
       state
     }
 
-    matchTinaState(1,0,TinaState.state1.length,null)
+    matchTinaState(1, 0, TinaState.state1.length, null)
   }
 }
+
 
 case class TinaParser(lexer: TinaLexer) {
 
