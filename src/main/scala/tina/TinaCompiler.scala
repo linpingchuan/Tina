@@ -2,6 +2,8 @@ package tina
 
 import java.util.Objects
 
+import com.sun.crypto.provider.AESCipher.AES128_CBC_NoPadding
+
 /**
   * Created by Lin on 17/4/28.
   */
@@ -376,6 +378,43 @@ case class TinaStateMachine(lexer: TinaLexer) {
   }
 }
 
+/**
+  * tina类型
+  */
+trait TinaType{
+  def getName():String
+}
+
+/**
+  * tina作用域接口
+  */
+trait TinaScope{
+  def getScopeName():String
+  def getEnclosingScope():TinaScope
+  def define(sym:TinaSymbol)
+  def resolve(name:String):TinaSymbol
+}
+
+/**
+  * 语法树
+  * @param scope
+  * @param symbol
+  * @param token
+  */
+case class SymbolAst(scope:TinaScope,symbol:TinaSymbol,token:TinaToken){
+
+}
+case class TinaSymbol(name:String,tinaType:TinaType,tinaScope: TinaScope,symbolAst: SymbolAst) extends TinaScope with TinaType{
+  override def getScopeName(): String = ???
+
+  override def getEnclosingScope(): TinaScope = ???
+
+  override def define(sym: TinaSymbol): Unit = ???
+
+  override def resolve(name: String): TinaSymbol = ???
+
+  override def getName(): String = ???
+}
 
 case class TinaParser(lexer: TinaLexer) {
 
