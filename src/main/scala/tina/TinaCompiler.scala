@@ -378,44 +378,45 @@ case class TinaStateMachine(lexer: TinaLexer) {
   }
 }
 
-/**
-  * tina类型
-  */
-trait TinaType{
-  def getName():String
+//case class
+
+
+case class TinaType(tinaType:Int){
+  override def toString: String = TinaType.typeNames(tinaType)
 }
 
-/**
-  * tina作用域接口
-  */
-trait TinaScope{
-  def getScopeName():String
-  def getEnclosingScope():TinaScope
-  def define(sym:TinaSymbol)
-  def resolve(name:String):TinaSymbol
+object TinaType{
+  val LITERAL=0
+  val VARIABLE_DECLARATOR=1
+  val BINARY_EXPRESSION=2
+  val BLOCK_STATEMENT=3
+  val typeNames=List[String](
+    "LITERAL",
+    "VARIABLE_DECLARATOR",
+    "BINARY_EXPRESSION",
+    "BLOCK_STATEMENT"
+  )
 }
 
-/**
-  * 语法树
-  * @param scope
-  * @param symbol
-  * @param token
-  */
-case class SymbolAst(scope:TinaScope,symbol:TinaSymbol,token:TinaToken){
-
+case class TinaScope(tinaScope:Int){
+  override def toString: String = TinaScope.scopeNames(tinaScope)
 }
-case class TinaSymbol(name:String,tinaType:TinaType,tinaScope: TinaScope,symbolAst: SymbolAst) extends TinaScope with TinaType{
-  override def getScopeName(): String = ???
 
-  override def getEnclosingScope(): TinaScope = ???
-
-  override def define(sym: TinaSymbol): Unit = ???
-
-  override def resolve(name: String): TinaSymbol = ???
-
-  override def getName(): String = ???
+object TinaScope{
+  val scopeNames=List[String]()
 }
+
+case class Identifier(tinaType:String,name:String)
+
+case class Literal(tinaType:String,value:Any,raw:String)
+
+case class BinaryExpression(tinaType:String,operator:String,left:Any,right:Any)
+
+case class Declaration(tinaType:String,id:Identifier,init:Any)
+
+case class VariableDeclaration(tinatype:String)
 
 case class TinaParser(lexer: TinaLexer) {
+
 
 }
