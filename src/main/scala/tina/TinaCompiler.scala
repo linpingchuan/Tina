@@ -394,7 +394,9 @@ object TinaType{
     "LITERAL",
     "VARIABLE_DECLARATOR",
     "BINARY_EXPRESSION",
-    "BLOCK_STATEMENT"
+    "BLOCK_STATEMENT",
+    "EXPRESSION_STATEMENT",
+    "ASSIGNMENT_EXPRESSION"
   )
 }
 
@@ -406,15 +408,103 @@ object TinaScope{
   val scopeNames=List[String]()
 }
 
+/**
+  * 标识符
+  * @param tinaType 类型
+  * @param name 名字
+  */
 case class Identifier(tinaType:String,name:String)
 
+/**
+  * 字面量
+  * @param tinaType 类型
+  * @param value 值
+  * @param raw 原生类型
+  */
 case class Literal(tinaType:String,value:Any,raw:String)
 
+/**
+  * 二分表达式(包括比较，赋值)
+  * @param tinaType 类型
+  * @param operator 作用符
+  * @param left 左式
+  * @param right 右式
+  */
 case class BinaryExpression(tinaType:String,operator:String,left:Any,right:Any)
 
+/**
+  * 普通调用函数表达式的名称
+  * @param tinaType
+  * @param name
+  */
+case class Callee(tinaType:String,name:String)
+
+/**
+  * 实例化的对象
+  * @param tinaType
+  * @param name
+  */
+case class TinaObject(tinaType:String,name:String)
+
+/**
+  * 实例化的对象属性
+  * @param tinaType
+  * @param name
+  */
+case class TinaProperty(tinaType:String,name:String)
+
+/**
+  * 调用的参数
+  * @param tinaType
+  * @param name
+  */
+case class TinaArgument(tinaType:String,name:String)
+/**
+  * 调用成员表达式
+  * @param tinaType
+  * @param computed
+  * @param tinaObject
+  * @param tinaProperty
+  */
+case class MemberExpression(tinaType:String,computed:Boolean,tinaObject: TinaObject,tinaProperty: TinaProperty)
+
+/**
+  * 调用表达式,callee表达的是Callee或者MemberExpression
+  * @param tinaType
+  * @param callee
+  * @param arguments
+  */
+case class CallExpression(tinaType:String,callee:Any,arguments:List[TinaArgument])
+
+/**
+  * 声明并且包含初始化
+  * @param tinaType 类型
+  * @param id
+  * @param init
+  */
 case class Declaration(tinaType:String,id:Identifier,init:Any)
 
-case class VariableDeclaration(tinatype:String)
+/**
+  * 变量的声明，并且包含初始化
+  * @param tinaType
+  * @param declarations
+  */
+case class VariableDeclaration(tinaType:String,declarations:List[Declaration])
+
+/**
+  * 表达式语句
+  * @param tinaType
+  * @param expression
+  */
+case class ExpressionStatement(tinaType:String,expression:Any)
+
+/**
+  * 块语句
+  * @param tinaType
+  * @param body
+  */
+case class BlockStatement(tinaType:String,body:List[ExpressionStatement])
+
 
 case class TinaParser(lexer: TinaLexer) {
 
