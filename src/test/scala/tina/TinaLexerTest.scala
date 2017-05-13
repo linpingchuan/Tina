@@ -6,7 +6,7 @@ import org.junit.Test
 /**
   * Created by Lin on 17/4/29.
   */
-class TinaTokenTest {
+class TinaLexerTest {
   @Test
   def testSkip(): Unit ={
     val lexer=new TinaLexer(("love tina(){\n" +
