@@ -597,11 +597,10 @@ case class ReturnStatement(tinaType: String, argument: Any)
   * @param tinaType
   * @param id
   * @param params
-  * @param returnStatement
   */
-case class FunctionDeclaration(tinaType: String, id: Identifier, params: List[Identifier],  returnStatement: ReturnStatement){
-  var body: List[Any]= _
-
+case class FunctionDeclaration(tinaType: String, id: Identifier, params: List[Identifier] ){
+  var body: BlockStatement= _
+  var returnStatement: ReturnStatement= _
 }
 
 /**
@@ -646,18 +645,29 @@ case class TinaParser(lexer: TinaLexer) {
       globalVariable = globalVariable :+ VariableDeclaration(TinaType.typeNames(TinaType.VARIABLE_DECLARATOR), List(declaration))
   }
 
-  def matchBlockStatement(lexer: TinaLexer): BlockStatement ={
-    def matchBlock(lexer: TinaLexer,expressionStatement: List[ExpressionStatement]):List[ExpressionStatement]={
-      null
+  def matchBlockStatement(lexer: TinaLexer): (BlockStatement,ReturnStatement) ={
+    def matchBlock(lexer: TinaLexer,expressionStatements: List[ExpressionStatement],retStatement:ReturnStatement):(List[ExpressionStatement],ReturnStatement)={
+      val token=lexer.nextToken()
+      if(token.kind==TinaToken.RIGHT_BRACE){
+        (expressionStatements,retStatement)
+      }else if(token.kind==TinaToken.RETURN){
+        matchBlock(lexer,expressionStatements,retStatement)
+      }else{
+        var statements=expressionStatements
+        matchBlock(lexer,statements,retStatement)
+      }
     }
+
     lexer.matchToken(TinaToken.LEFT_BRACE)
+    val body=matchBlock(lexer,List[ExpressionStatement](),null)
+    (BlockStatement(TinaType.typeNames(TinaType.BLOCK_STATEMENT),body._1),body._2)
   }
 
   /**
     * 函数类型赋值
     * @param funcName
     */
-  def assignWithFunction(funcName:TinaToken): Unit ={
+  def assignWithFunction(lexer: TinaLexer,funcName:TinaToken): FunctionDeclaration ={
     def assignWithFunctionParams(lexer:TinaLexer,params:List[Identifier]):List[Identifier]={
       var result=params
       val param=lexer.nextToken()
@@ -671,16 +681,19 @@ case class TinaParser(lexer: TinaLexer) {
       }
     }
 
-
-
     val identifier=Identifier(TinaType.typeNames(TinaType.IDENTIFIER),funcName.name.asInstanceOf[String])
-    var params=List[Identifier]()
     if(lexer.buffer(1).kind==TinaToken.LEFT_PARENT){
-      lexer.reset()
       lexer.next(2)
-
-      params=assignWithFunctionParams(lexer,params)
-
+      val funcParams=assignWithFunctionParams(lexer,List[Identifier]())
+      val funcDecl=FunctionDeclaration(TinaType.typeNames(TinaType.FUNCTION_DECLARATION),identifier,funcParams)
+      lexer.reset()
+      lexer.syn(1)
+      if(lexer.buffer(0).kind==TinaToken.LEFT_BRACE){
+        val funcBody=matchBlockStatement(lexer)
+        funcDecl.body=funcBody._1
+        funcDecl.returnStatement=funcBody._2
+      }
+      funcDecl
 
     }throw TinaParseException("left parent not found")
   }
@@ -693,7 +706,7 @@ case class TinaParser(lexer: TinaLexer) {
         lexer.syn(2)
         if(lexer.buffer.length==2){
           if(lexer.buffer(0).kind==TinaToken.FUNCTION) {
-            assignWithFunction(lexer.buffer(0))
+            assignWithFunction(lexer,lexer.buffer(0))
           }else
             throw TinaParseException("function name not found")
         }else
