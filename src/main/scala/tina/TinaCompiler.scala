@@ -10,6 +10,7 @@ case class TinaCompiler() {
 }
 
 case class TinaToken(name: Any, kind: Int, line: Int, pos: Int) {
+
   override def toString: String = "name: " + name + " kind: " + TinaToken.tokenNames(kind) + " in line: " + line + " pos: " + pos
 }
 
@@ -45,14 +46,22 @@ object TinaToken {
   val FUNCTION = 26
   val GREAT = 27
   val LOW = 28
+  val COMMA=29
   val tokenNames: List[String] = List[String](
     "int", "float", "(", ")", "{",
     "}", "tina", "love", "string", "+",
     "-", "*", "/", "while", "unit",
     "return", "for", "if", "else", "elif",
     "\"", "'", "class", ":", "var",
-    "=", "function", ">", "<"
+    "=", "function", ">", "<","COMMA"
   )
+
+  def convertType(kind:Int):String =kind match{
+    case TinaToken.INT => TinaType.typeNames(TinaType.LITERAL)
+    case TinaToken.FLOAT => TinaType.typeNames(TinaType.LITERAL)
+    case TinaToken.STRING => TinaType.typeNames(TinaType.LITERAL)
+    case TinaToken.VAR => TinaType.typeNames(TinaType.IDENTIFIER)
+  }
 }
 
 case class TinaLexer(src: Array[Char]) {
@@ -66,10 +75,31 @@ case class TinaLexer(src: Array[Char]) {
   var buffer: List[TinaToken] = List[TinaToken]()
   var line: Int = 1
 
+  /**
+    * 匹配该token
+    * @param kind
+    * @return
+    */
   def matchToken(kind: Int): TinaToken = {
-    null
+    val token=nextToken()
+    token.kind match{
+      case kind => token
+      case _ => throw MisMatchTokenException("expected "+TinaToken.tokenNames(kind)+" actual "+TinaToken.tokenNames(token.kind))
+    }
   }
 
+  /**
+    * 判断是否为此token
+    * @param kind
+    * @return
+    */
+  def isTokenOf(kind:Int):Boolean={
+    val token=nextToken()
+    token.kind match{
+      case kind => true
+      case _ => false
+    }
+  }
   def skip(): Unit = index match {
     case lt if index < src.length =>
       val char = src(index)
@@ -571,6 +601,7 @@ case class ReturnStatement(tinaType: String, argument: Any)
   */
 case class FunctionDeclaration(tinaType: String, id: Identifier, params: List[Identifier],  returnStatement: ReturnStatement){
   var body: List[Any]= _
+
 }
 
 /**
@@ -615,15 +646,43 @@ case class TinaParser(lexer: TinaLexer) {
       globalVariable = globalVariable :+ VariableDeclaration(TinaType.typeNames(TinaType.VARIABLE_DECLARATOR), List(declaration))
   }
 
+  def matchBlockStatement(lexer: TinaLexer): BlockStatement ={
+    def matchBlock(lexer: TinaLexer,expressionStatement: List[ExpressionStatement]):List[ExpressionStatement]={
+      null
+    }
+    lexer.matchToken(TinaToken.LEFT_BRACE)
+  }
+
   /**
     * 函数类型赋值
     * @param funcName
     */
   def assignWithFunction(funcName:TinaToken): Unit ={
-    val identifier=Identifier(TinaType.typeNames(TinaType.IDENTIFIER),funcName.name.asInstanceOf[String])
-    if(lexer.buffer(0).kind==TinaToken.LEFT_PARENT){
-      
+    def assignWithFunctionParams(lexer:TinaLexer,params:List[Identifier]):List[Identifier]={
+      var result=params
+      val param=lexer.nextToken()
+      if(lexer.isTokenOf(TinaToken.RIGHT_PARENT)){
+        params
+      }else{
+        val identifier=Identifier(TinaToken.convertType(param.kind),param.name.asInstanceOf[String])
+        result=result:+identifier
+        lexer.matchToken(TinaToken.COMMA)
+        assignWithFunctionParams(lexer,result)
+      }
     }
+
+
+
+    val identifier=Identifier(TinaType.typeNames(TinaType.IDENTIFIER),funcName.name.asInstanceOf[String])
+    var params=List[Identifier]()
+    if(lexer.buffer(1).kind==TinaToken.LEFT_PARENT){
+      lexer.reset()
+      lexer.next(2)
+
+      params=assignWithFunctionParams(lexer,params)
+
+
+    }throw TinaParseException("left parent not found")
   }
 
   def parse(): Unit = {
@@ -632,9 +691,15 @@ case class TinaParser(lexer: TinaLexer) {
     if(Objects.nonNull(token)){
       if (token.kind == TinaToken.LOVE) {
         lexer.syn(2)
-        if(lexer.buffer(0).kind==TinaToken.FUNCTION){
-          assignWithFunction(lexer.buffer(0))
-        }
+        if(lexer.buffer.length==2){
+          if(lexer.buffer(0).kind==TinaToken.FUNCTION) {
+            assignWithFunction(lexer.buffer(0))
+          }else
+            throw TinaParseException("function name not found")
+        }else
+          throw TinaParseException("both function name and left parent are not found")
+
+
       } else if (token.kind == TinaToken.VAR) {
         lexer.syn(2)
 
