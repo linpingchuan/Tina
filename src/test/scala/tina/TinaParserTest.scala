@@ -12,5 +12,6 @@ class TinaParserTest {
     val compiler=TinaParser(lexer)
     compiler.run()
     println(compiler.globalVariable)
+    println(compiler.functionDeclarations)
   }
 }

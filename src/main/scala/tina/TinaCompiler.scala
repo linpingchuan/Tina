@@ -61,6 +61,7 @@ object TinaToken {
     case TinaToken.FLOAT => TinaType.typeNames(TinaType.LITERAL)
     case TinaToken.STRING => TinaType.typeNames(TinaType.LITERAL)
     case TinaToken.VAR => TinaType.typeNames(TinaType.IDENTIFIER)
+
   }
 }
 
@@ -82,9 +83,10 @@ case class TinaLexer(src: Array[Char]) {
     */
   def matchToken(kind: Int): TinaToken = {
     val token=nextToken()
-    token.kind match{
-      case kind => token
-      case _ => throw MisMatchTokenException("expected "+TinaToken.tokenNames(kind)+" actual "+TinaToken.tokenNames(token.kind))
+    if(token.kind==kind){
+      token
+    }else{
+      throw MisMatchTokenException("expected "+TinaToken.tokenNames(kind)+" actual "+TinaToken.tokenNames(token.kind))
     }
   }
 
@@ -94,11 +96,15 @@ case class TinaLexer(src: Array[Char]) {
     * @return
     */
   def isTokenOf(kind:Int):Boolean={
-    val token=nextToken()
-    token.kind match{
-      case kind => true
-      case _ => false
-    }
+    val tmp=buffer
+    reset()
+    syn(1)
+    val token=buffer(0)
+    if(buffer.length==1){
+      buffer=tmp
+      if(token.kind==kind)true else false
+    }else
+      throw MisMatchTokenException("expected "+TinaToken.tokenNames(kind)+" actual "+TinaToken.tokenNames(token.kind))
   }
   def skip(): Unit = index match {
     case lt if index < src.length =>
@@ -429,20 +435,20 @@ case class TinaType(tinaType: Int) {
 object TinaType {
   val IDENTIFIER = 0
   val LITERAL = 1
-  val BINARY_EXPRESSION = 3
-  val CALLEE = 4
-  val TINA_OBJECT = 5
-  val TINA_PROPERTY = 6
-  val TINA_ARGUMENT = 7
-  val MEMBER_EXPRESSION = 8
-  val CALL_EXPRESSION = 9
-  val DECLARATION = 10
-  val VARIABLE_DECLARATOR = 11
-  val EXPRESSION_STATEMENT = 12
-  val BLOCK_STATEMENT = 13
-  val ASSIGNMENT_EXPRESSION = 14
-  val RETURN_STATEMENT = 15
-  val FUNCTION_DECLARATION = 16
+  val BINARY_EXPRESSION = 2
+  val CALLEE = 3
+  val TINA_OBJECT = 4
+  val TINA_PROPERTY = 5
+  val TINA_ARGUMENT = 6
+  val MEMBER_EXPRESSION = 7
+  val CALL_EXPRESSION = 8
+  val DECLARATION = 9
+  val VARIABLE_DECLARATOR = 10
+  val EXPRESSION_STATEMENT = 11
+  val BLOCK_STATEMENT = 12
+  val ASSIGNMENT_EXPRESSION = 13
+  val RETURN_STATEMENT = 14
+  val FUNCTION_DECLARATION = 15
 
   val typeNames = List[String](
     "IDENTIFIER",
@@ -670,10 +676,11 @@ case class TinaParser(lexer: TinaLexer) {
   def assignWithFunction(lexer: TinaLexer,funcName:TinaToken): FunctionDeclaration ={
     def assignWithFunctionParams(lexer:TinaLexer,params:List[Identifier]):List[Identifier]={
       var result=params
-      val param=lexer.nextToken()
       if(lexer.isTokenOf(TinaToken.RIGHT_PARENT)){
+        lexer.nextToken()
         params
       }else{
+        val param=lexer.nextToken()
         val identifier=Identifier(TinaToken.convertType(param.kind),param.name.asInstanceOf[String])
         result=result:+identifier
         lexer.matchToken(TinaToken.COMMA)
@@ -695,7 +702,7 @@ case class TinaParser(lexer: TinaLexer) {
       }
       funcDecl
 
-    }throw TinaParseException("left parent not found")
+    }else throw TinaParseException("left parent not found")
   }
 
   def parse(): Unit = {
@@ -706,7 +713,7 @@ case class TinaParser(lexer: TinaLexer) {
         lexer.syn(2)
         if(lexer.buffer.length==2){
           if(lexer.buffer(0).kind==TinaToken.FUNCTION) {
-            assignWithFunction(lexer,lexer.buffer(0))
+            functionDeclarations=functionDeclarations:+assignWithFunction(lexer,lexer.buffer(0))
           }else
             throw TinaParseException("function name not found")
         }else
