@@ -660,21 +660,21 @@ case class TinaParser(lexer: TinaLexer) {
   }
 
   def matchBlockStatement(lexer: TinaLexer): (BlockStatement, ReturnStatement) = {
-    def matchBlock(lexer: TinaLexer, expressionStatements: List[Any], retStatement: ReturnStatement): (List[Any], ReturnStatement) = {
+    def matchBody(lexer: TinaLexer, expressionStatements: List[Any], retStatement: ReturnStatement): (List[Any], ReturnStatement) = {
       val token = lexer.nextToken()
       if (token.kind == TinaToken.RIGHT_BRACE) {
         (expressionStatements, retStatement)
       } else if (token.kind == TinaToken.RETURN) {
-        matchBlock(lexer, expressionStatements, retStatement)
+        matchBody(lexer, expressionStatements, retStatement)
       } else {
         var statements = expressionStatements
 
-        matchBlock(lexer, statements, retStatement)
+        matchBody(lexer, statements, retStatement)
       }
     }
 
     lexer.matchToken(TinaToken.LEFT_BRACE)
-    val body = matchBlock(lexer, List[ExpressionStatement](), null)
+    val body = matchBody(lexer, List[ExpressionStatement](), null)
     (BlockStatement(TinaType.typeNames(TinaType.BLOCK_STATEMENT), body._1), body._2)
   }
 
@@ -758,8 +758,30 @@ case class TinaParser(lexer: TinaLexer) {
   }
 }
 
-case class ExpressionStateMachine(lexer: TinaLexer, expressions: List[ExpressionStatement]) {
-  def nextExpressions(): List[ExpressionStatement] = {
-    null
+case class ExpressionStateMachine(lexer: TinaLexer, expressions: List[Any]) {
+  var leftBraces=List[TinaToken]()
+
+
+  def nextExpressions(): List[Any] = {
+    var expressionStatements=expressions
+    var token=lexer.nextToken()
+    if(token.kind==TinaToken.LEFT_BRACE){
+      leftBraces=token+:leftBraces
+    }else if(token.kind==TinaToken.RIGHT_BRACE){
+      if(leftBraces.length>=1)
+      leftBraces=leftBraces.drop(1)
+      else
+        throw new RuntimeException("not enough left brace to compare with right brace")
+    }else{
+      if(token.kind==TinaToken.VAR){
+        val leftIdentifier=Identifier(TinaType.typeNames(TinaType.IDENTIFIER),token.name.asInstanceOf[String])
+        token=lexer.nextToken()
+        if(token.kind==TinaToken.EQUAL){
+          
+        }
+      }
+
+    }
+    expressionStatements
   }
 }
