@@ -15,5 +15,6 @@ class TinaParserTest {
     compiler.run()
     println(compiler.globalVariable)
     println(compiler.functionDeclarations)
+    println(compiler.functionDeclarations(0).body)
   }
 }
