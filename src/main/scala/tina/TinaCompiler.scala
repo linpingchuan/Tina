@@ -181,8 +181,9 @@ case class TinaLexer(src: Array[Char]) {
       nextLetters(TinaToken(name, TinaToken.LOVE, line, token.pos + 1))
     } else if (name == TinaToken.tokenNames(TinaToken.TINA)) {
       nextLetters(TinaToken(name, TinaToken.TINA, line, token.pos + 1))
-    }
-    else if (index < src.length && src(index).toString == TinaToken.tokenNames(TinaToken.LEFT_PARENT)) {
+    } else if(name==TinaToken.tokenNames(TinaToken.RETURN)){
+      nextLetters(TinaToken(name,TinaToken.RETURN,line,token.pos+1))
+    }else if (index < src.length && src(index).toString == TinaToken.tokenNames(TinaToken.LEFT_PARENT)) {
       nextLetters(TinaToken(name, TinaToken.FUNCTION, line, token.pos + 1))
     }
     else {
@@ -773,9 +774,54 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
     }
   }
 
+  /**
+    * 返回语句
+    * @param lexer
+    * @return
+    */
+  def returnExp(lexer:TinaLexer):Any={
+    val token=lexer.nextToken()
+
+    ReturnStatement(TinaType.typeNames(TinaType.RETURN_STATEMENT),binaryExp(token,lexer))
+  }
+
+  /**
+    * 函数调用
+    * @param callee
+    * @param lexer
+    * @return
+    */
+  def callInit(callee:Identifier,lexer:TinaLexer):Any={
+    lexer.reset()
+    lexer.syn(1)
+    if(lexer.buffer(0).kind==TinaToken.LEFT_PARENT){
+      lexer.nextToken()
+      val token=lexer.nextToken()
+      if(token.kind==TinaToken.VAR){
+
+      }
+    }
+  }
+
+  /**
+    * 变量初始化
+    * @param left
+    * @param lexer
+    * @return
+    */
   def variableInit(left: Identifier, lexer: TinaLexer): Any = {
-    var token = lexer.nextToken()
-    val declaration = Declaration(TinaType.typeNames(TinaType.DECLARATION), left, binaryExp(token, lexer))
+    lexer.reset()
+    lexer.syn(1)
+    var declaration:Declaration= null
+    if (lexer.buffer(0).kind == TinaToken.EQUAL) {
+      lexer.nextToken()
+      val token=lexer.nextToken()
+      declaration = Declaration(TinaType.typeNames(TinaType.DECLARATION), left, binaryExp(token, lexer))
+    }else if(lexer.buffer(0).kind==TinaToken.LEFT_PARENT){
+      return callInit(left,lexer)
+    }else{
+      declaration = Declaration(TinaType.typeNames(TinaType.DECLARATION), left, null)
+    }
     val variableDecl = VariableDeclaration(TinaType.typeNames(TinaType.VARIABLE_DECLARATOR), List(declaration))
     return variableDecl
   }
@@ -787,7 +833,7 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
       if (leftBraces.isEmpty)
         return expressionStatements
       else
-        throw MisMatchTokenException("not enough left brace to compare with right brace")
+        throw MisMatchTokenException("not enough right brace to compare with left brace")
     } else {
       if (token.kind == TinaToken.LEFT_BRACE) {
         leftBraces = token +: leftBraces
@@ -802,18 +848,14 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
       } else {
         if (token.kind == TinaToken.VAR) {
           val leftIdentifier = Identifier(TinaType.typeNames(TinaType.IDENTIFIER), token.name.asInstanceOf[String])
-          lexer.reset()
-          lexer.syn(1)
-          if (lexer.buffer(0).kind == TinaToken.EQUAL) {
-            lexer.nextToken()
-            expressionStatements = expressionStatements :+ variableInit(leftIdentifier, lexer)
-            return nextExpressions(expressionStatements)
-          }
+          expressionStatements = expressionStatements :+ variableInit(leftIdentifier, lexer)
+          return nextExpressions(expressionStatements)
+        }else if(token.kind==TinaToken.RETURN){
+          expressionStatements=expressionStatements:+returnExp(lexer)
+          return nextExpressions(expressionStatements)
         }
-
       }
       expressionStatements
-
     }
   }
 }
