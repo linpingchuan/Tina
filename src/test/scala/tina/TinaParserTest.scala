@@ -8,8 +8,9 @@ import org.junit.Test
 class TinaParserTest {
   @Test
   def testRun(): Unit ={
-    val lexer=TinaLexer((" love test(a, b){" +
-      "c=a+1+b+23+b" +
+    val lexer=TinaLexer((" love test(a, b){ " +
+      "c=a+1+b+23+b " +
+      " run(a,2,3,4) " +
       " return c+23+12 " +
       "}").toCharArray)
     val compiler=TinaParser(lexer)
