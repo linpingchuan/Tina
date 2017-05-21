@@ -11,6 +11,7 @@ class TinaParserTest {
     val lexer=TinaLexer((" love test(a, b){ " +
       "c=a+1+b+23+b " +
       " run(a,2,3,4) " +
+      " if(a>1){ run(1) } " +
       " return c+23+12 " +
       "}").toCharArray)
     val compiler=TinaParser(lexer)

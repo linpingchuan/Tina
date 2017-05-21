@@ -777,6 +777,9 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
     ReturnStatement(TinaType.RETURN_STATEMENT,TinaType.typeNames(TinaType.RETURN_STATEMENT),binaryExp(token,lexer))
   }
 
+  def ifInit(lexer:TinaLexer):Any={
+    null
+  }
   /**
     * 函数调用
     * @param callee
@@ -871,6 +874,8 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
           val funcIdentifier=Identifier(TinaType.typeNames(TinaType.IDENTIFIER),token.name.asInstanceOf[String])
           expressionStatements = expressionStatements :+ callInit(funcIdentifier, lexer)
           return nextExpressions(expressionStatements)
+        }else if(token.kind==TinaToken.IF){
+
         }
         else if(token.kind==TinaToken.RETURN){
           expressionStatements=expressionStatements:+returnExp(lexer)
