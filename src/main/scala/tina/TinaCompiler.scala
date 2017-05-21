@@ -777,8 +777,13 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
     ReturnStatement(TinaType.RETURN_STATEMENT,TinaType.typeNames(TinaType.RETURN_STATEMENT),binaryExp(token,lexer))
   }
 
+  /**
+    * if表达式的初始化
+    * @param lexer
+    * @return
+    */
   def ifInit(lexer:TinaLexer):Any={
-    null
+    val leftParent=lexer.nextToken()
   }
   /**
     * 函数调用
