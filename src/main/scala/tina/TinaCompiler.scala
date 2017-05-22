@@ -181,9 +181,9 @@ case class TinaLexer(src: Array[Char]) {
       nextLetters(TinaToken(name, TinaToken.LOVE, line, token.pos + 1))
     } else if (name == TinaToken.tokenNames(TinaToken.TINA)) {
       nextLetters(TinaToken(name, TinaToken.TINA, line, token.pos + 1))
-    } else if(name==TinaToken.tokenNames(TinaToken.RETURN)){
-      nextLetters(TinaToken(name,TinaToken.RETURN,line,token.pos+1))
-    }else if (index < src.length && src(index).toString == TinaToken.tokenNames(TinaToken.LEFT_PARENT)) {
+    } else if (name == TinaToken.tokenNames(TinaToken.RETURN)) {
+      nextLetters(TinaToken(name, TinaToken.RETURN, line, token.pos + 1))
+    } else if (index < src.length && src(index).toString == TinaToken.tokenNames(TinaToken.LEFT_PARENT)) {
       nextLetters(TinaToken(name, TinaToken.FUNCTION, line, token.pos + 1))
     }
     else {
@@ -234,7 +234,8 @@ case class TinaLexer(src: Array[Char]) {
       char match {
         case isSpecial if
         char == '(' || char == ')' || char == '{' || char == '}' ||
-          char == '>' || char == '<' || char == '=' || char == ',' || char == '+'
+          char == '>' || char == '<' || char == '=' || char == ',' ||
+          char == '+' || char == '*' || char == '-' || char == '/'
         => result = true
         case _ =>
       }
@@ -294,6 +295,8 @@ case class TinaLexer(src: Array[Char]) {
           TinaToken(name, TinaToken.EQUAL, line, lineIndex)
         else if (state.state == "+")
           TinaToken(name, TinaToken.ADD, line, lineIndex)
+        else if (state.state == "*")
+          TinaToken(name, TinaToken.MUL, line, lineIndex)
         else
           throw MisMatchTokenException("expecting special letter but not found")
       }
@@ -394,13 +397,22 @@ object TinaState {
   val state1: List[TinaState] = List[TinaState](
     TinaState('=', 0, 1, 0, "="),
     TinaState('>', 1, 2, 0, ">"),
-    TinaState('+', 0, 0, 0, "+")
+    TinaState('+', 3, 0, 0, "+"),
+    TinaState('-', 5, 0, 0, "-"),
+    TinaState('/', 0, 0, 0, "/"),
+    TinaState('*', 0, 0, 0, "*")
   )
 
   val state2: List[TinaState] = List[TinaState](
-    TinaState('=', 0, 0, 0, "=="),
-    TinaState('>', 0, 1, 0, ">>"),
-    TinaState('=', 0, 0, 0, ">=")
+    TinaState('=', 0, 0, state1.length + 0, "=="),
+    TinaState('>', 0, 1, state1.length + 1, ">>"),
+    TinaState('=', 0, 0, state1.length + 2, ">="),
+    TinaState('=', 0, 0, state1.length + 3, "+="),
+    TinaState('+', 0, 0, state1.length + 4, "++"),
+    TinaState('=', 0, 0, state1.length + 5, "-="),
+    TinaState('-', 0, 0, state1.length + 6, "--"),
+    TinaState('=', 0, 0, state1.length + 7, "/="),
+    TinaState('=', 0, 0, state1.length + 8, "*=")
   )
   val state3: List[TinaState] = List[TinaState](
     TinaState('=', 0, 0, 0, ">>=")
@@ -589,7 +601,7 @@ case class ExpressionStatement(tinaType: String, expression: Any)
   * @param tinaType
   * @param body
   */
-case class BlockStatement(tinaType:Int,desc: String, body: List[Any])
+case class BlockStatement(tinaType: Int, desc: String, body: List[Any])
 
 /**
   * 函数返回语句
@@ -597,7 +609,7 @@ case class BlockStatement(tinaType:Int,desc: String, body: List[Any])
   * @param tinaType
   * @param argument
   */
-case class ReturnStatement(tinaType: Int,desc:String, argument: Any)
+case class ReturnStatement(tinaType: Int, desc: String, argument: Any)
 
 /**
   * 函数声明
@@ -606,7 +618,7 @@ case class ReturnStatement(tinaType: Int,desc:String, argument: Any)
   * @param id
   * @param params
   */
-case class FunctionDeclaration(tinaType: Int,desc:String, id: Identifier, params: List[Identifier]) {
+case class FunctionDeclaration(tinaType: Int, desc: String, id: Identifier, params: List[Identifier]) {
   var body: BlockStatement = _
 }
 
@@ -659,7 +671,7 @@ case class TinaParser(lexer: TinaLexer) {
       ExpressionStateMachine(lexer).nextExpressions(expressionStatements)
     }
 
-    BlockStatement(TinaType.BLOCK_STATEMENT,TinaType.typeNames(TinaType.BLOCK_STATEMENT), matchBody(lexer, List()))
+    BlockStatement(TinaType.BLOCK_STATEMENT, TinaType.typeNames(TinaType.BLOCK_STATEMENT), matchBody(lexer, List()))
   }
 
   /**
@@ -687,7 +699,7 @@ case class TinaParser(lexer: TinaLexer) {
     if (lexer.buffer(1).kind == TinaToken.LEFT_PARENT) {
       lexer.next(2)
       val funcParams = assignWithFunctionParams(lexer, List[Identifier]())
-      val funcDecl = FunctionDeclaration(TinaType.FUNCTION_DECLARATION,TinaType.typeNames(TinaType.FUNCTION_DECLARATION), identifier, funcParams)
+      val funcDecl = FunctionDeclaration(TinaType.FUNCTION_DECLARATION, TinaType.typeNames(TinaType.FUNCTION_DECLARATION), identifier, funcParams)
       lexer.reset()
       lexer.syn(1)
       if (lexer.buffer(0).kind == TinaToken.LEFT_BRACE) {
@@ -744,87 +756,140 @@ case class TinaParser(lexer: TinaLexer) {
 case class ExpressionStateMachine(lexer: TinaLexer) {
   var leftBraces = List[TinaToken]()
 
-  def binaryExp(token: TinaToken, lexer: TinaLexer): Any = {
-    if (token.kind == TinaToken.VAR) {
-      val left = Identifier(TinaType.typeNames(TinaType.IDENTIFIER), token.name.asInstanceOf[String])
-      lexer.reset()
-      lexer.syn(1)
-      if (lexer.buffer(0).kind == TinaToken.ADD) {
-        lexer.nextToken()
-        return BinaryExpression(TinaType.typeNames(TinaType.BINARY_EXPRESSION), lexer.buffer(0).name.asInstanceOf[String], left, binaryExp(lexer.nextToken(), lexer))
-      }
-      return left
-    } else if (token.kind == TinaToken.INT) {
-      val left = Literal(TinaType.typeNames(TinaType.LITERAL), token.name.asInstanceOf[Int], String.valueOf(token.name.asInstanceOf[Int]))
-      lexer.reset()
-      lexer.syn(1)
-      if (lexer.buffer(0).kind == TinaToken.ADD) {
-        lexer.nextToken()
-        return BinaryExpression(TinaType.typeNames(TinaType.BINARY_EXPRESSION), lexer.buffer(0).name.asInstanceOf[String], left, binaryExp(lexer.nextToken(), lexer))
-      }
-      return left
+  /**
+    * 二元表达式，优先级： 括号 > 乘除 > 加减
+    *
+    * @param lexer
+    * @return
+    */
+  def binaryExp(lexer: TinaLexer): Any = {
+    var stack: List[Any] = List[Any]()
+
+    def binary(): Unit = {
+      val varToken = lexer.nextToken()
+      val leftIdentifier = stack.head
+      stack = stack.drop(1)
+      factor()
+      val rightIdentifier = stack.head
+      stack = stack.drop(1)
+      val binaryExpression = BinaryExpression(TinaType.typeNames(TinaType.BINARY_EXPRESSION), varToken.name.asInstanceOf[String], leftIdentifier, rightIdentifier)
+      stack = stack :+ binaryExpression
     }
+
+    def expr(): Unit = {
+      term()
+      lexer.reset()
+      lexer.syn(1)
+      if (lexer.buffer.nonEmpty&&
+        lexer.buffer.head.kind == TinaToken.ADD ||
+        lexer.buffer.head.kind == TinaToken.SUB) {
+        binary()
+      }
+    }
+
+    def term(): Unit = {
+      factor()
+      lexer.reset()
+      lexer.syn(1)
+      if (lexer.buffer.nonEmpty&&
+        lexer.buffer.head.kind == TinaToken.MUL ||
+        lexer.buffer.head.kind == TinaToken.DIV) {
+        binary()
+      }
+    }
+
+    def factor(): Unit = {
+      lexer.reset()
+      lexer.syn(1)
+      if(lexer.buffer.nonEmpty){
+        if (lexer.buffer.head.kind == TinaToken.LEFT_PARENT) {
+          lexer.nextToken()
+          expr()
+        } else if (lexer.buffer.head.kind == TinaToken.VAR) {
+          val varToken = lexer.nextToken()
+          val identifier = Identifier(TinaType.typeNames(TinaType.IDENTIFIER), varToken.name.asInstanceOf[String])
+          stack = stack :+ identifier
+        } else if (lexer.buffer.head.kind == TinaToken.INT) {
+          val varToken = lexer.nextToken()
+          val left = Literal(TinaType.typeNames(TinaType.LITERAL), varToken.name.asInstanceOf[Int], String.valueOf(varToken.name.asInstanceOf[Int]))
+          stack = stack :+ left
+        }
+      }
+
+    }
+
+    expr()
+    stack.head
   }
 
   /**
     * 返回语句
+    *
     * @param lexer
     * @return
     */
-  def returnExp(lexer:TinaLexer):Any={
-    val token=lexer.nextToken()
+  def returnExp(lexer: TinaLexer): Any = {
+    val token = lexer.nextToken()
 
-    ReturnStatement(TinaType.RETURN_STATEMENT,TinaType.typeNames(TinaType.RETURN_STATEMENT),binaryExp(token,lexer))
+    ReturnStatement(TinaType.RETURN_STATEMENT, TinaType.typeNames(TinaType.RETURN_STATEMENT), binaryExp( lexer))
   }
 
   /**
     * if表达式的初始化
+    *
     * @param lexer
     * @return
     */
-  def ifInit(lexer:TinaLexer):Any={
-    val leftParent=lexer.nextToken()
+  def ifInit(lexer: TinaLexer): Any = {
+    val leftParent = lexer.nextToken()
+    if (leftParent.kind == TinaToken.LEFT_PARENT) {
+
+    }
+
   }
+
   /**
     * 函数调用
+    *
     * @param callee
     * @param lexer
     * @return
     */
-  def callInit(callee:Identifier,lexer:TinaLexer):Any={
+  def callInit(callee: Identifier, lexer: TinaLexer): Any = {
     lexer.reset()
     lexer.syn(1)
-    def initArgus(lexer:TinaLexer,arguments:List[Any],comma:List[TinaToken]): List[Any] ={
+
+    def initArgus(lexer: TinaLexer, arguments: List[Any], comma: List[TinaToken]): List[Any] = {
       lexer.reset()
       lexer.syn(1)
-      if(lexer.buffer(0).kind==TinaToken.COMMA){
-        val token=lexer.nextToken()
-        return initArgus(lexer,arguments,comma:+token)
-      }else if(lexer.buffer(0).kind==TinaToken.VAR){
-        val token=lexer.nextToken()
-        val identifier=Identifier(TinaType.typeNames(TinaType.IDENTIFIER),token.name.asInstanceOf[String])
-        return initArgus(lexer,arguments:+identifier,comma.drop(1))
-      }else if(lexer.buffer(0).kind==TinaToken.INT){
-        val token=lexer.nextToken()
-        val literal=Literal(TinaType.typeNames(TinaType.LITERAL),token.name.asInstanceOf[Int],String.valueOf(token.name.asInstanceOf[Int]))
-        return initArgus(lexer,arguments:+literal,comma.drop(1))
-      }else if(lexer.buffer(0).kind==TinaToken.RIGHT_PARENT){
-        val token=lexer.nextToken()
-        if(comma.isEmpty)
+      if (lexer.buffer(0).kind == TinaToken.COMMA) {
+        val token = lexer.nextToken()
+        return initArgus(lexer, arguments, comma :+ token)
+      } else if (lexer.buffer(0).kind == TinaToken.VAR) {
+        val token = lexer.nextToken()
+        val identifier = Identifier(TinaType.typeNames(TinaType.IDENTIFIER), token.name.asInstanceOf[String])
+        return initArgus(lexer, arguments :+ identifier, comma.drop(1))
+      } else if (lexer.buffer(0).kind == TinaToken.INT) {
+        val token = lexer.nextToken()
+        val literal = Literal(TinaType.typeNames(TinaType.LITERAL), token.name.asInstanceOf[Int], String.valueOf(token.name.asInstanceOf[Int]))
+        return initArgus(lexer, arguments :+ literal, comma.drop(1))
+      } else if (lexer.buffer(0).kind == TinaToken.RIGHT_PARENT) {
+        val token = lexer.nextToken()
+        if (comma.isEmpty)
           return arguments
         else
-          throw MisMatchTokenException("unexpected token "+token.name.asInstanceOf[String])
+          throw MisMatchTokenException("unexpected token " + token.name.asInstanceOf[String])
       }
       return arguments
     }
 
 
-    if(lexer.buffer(0).kind==TinaToken.LEFT_PARENT){
+    if (lexer.buffer(0).kind == TinaToken.LEFT_PARENT) {
       lexer.nextToken()
-      val calle=Callee(TinaType.typeNames(TinaType.IDENTIFIER),callee.name)
-      val arguments:List[Any]=initArgus(lexer,List[Any](),List[TinaToken]())
-      val expression=CallExpression(TinaType.typeNames(TinaType.CALL_EXPRESSION),calle,arguments)
-      val expressionStatement=ExpressionStatement(TinaType.typeNames(TinaType.CALL_EXPRESSION),expression)
+      val calle = Callee(TinaType.typeNames(TinaType.IDENTIFIER), callee.name)
+      val arguments: List[Any] = initArgus(lexer, List[Any](), List[TinaToken]())
+      val expression = CallExpression(TinaType.typeNames(TinaType.CALL_EXPRESSION), calle, arguments)
+      val expressionStatement = ExpressionStatement(TinaType.typeNames(TinaType.CALL_EXPRESSION), expression)
       return expressionStatement
     }
     return callee
@@ -832,6 +897,7 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
 
   /**
     * 变量初始化
+    *
     * @param left
     * @param lexer
     * @return
@@ -839,12 +905,12 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
   def variableInit(left: Identifier, lexer: TinaLexer): Any = {
     lexer.reset()
     lexer.syn(1)
-    var declaration:Declaration= null
+    var declaration: Declaration = null
     if (lexer.buffer(0).kind == TinaToken.EQUAL) {
       lexer.nextToken()
-      val token=lexer.nextToken()
-      declaration = Declaration(TinaType.typeNames(TinaType.DECLARATION), left, binaryExp(token, lexer))
-    }else{
+      val token = lexer.nextToken()
+      declaration = Declaration(TinaType.typeNames(TinaType.DECLARATION), left, binaryExp( lexer))
+    } else {
       declaration = Declaration(TinaType.typeNames(TinaType.DECLARATION), left, null)
     }
     val variableDecl = VariableDeclaration(TinaType.typeNames(TinaType.VARIABLE_DECLARATOR), List(declaration))
@@ -875,15 +941,13 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
           val leftIdentifier = Identifier(TinaType.typeNames(TinaType.IDENTIFIER), token.name.asInstanceOf[String])
           expressionStatements = expressionStatements :+ variableInit(leftIdentifier, lexer)
           return nextExpressions(expressionStatements)
-        }else if(token.kind==TinaToken.FUNCTION){
-          val funcIdentifier=Identifier(TinaType.typeNames(TinaType.IDENTIFIER),token.name.asInstanceOf[String])
+        } else if (token.kind == TinaToken.FUNCTION) {
+          val funcIdentifier = Identifier(TinaType.typeNames(TinaType.IDENTIFIER), token.name.asInstanceOf[String])
           expressionStatements = expressionStatements :+ callInit(funcIdentifier, lexer)
           return nextExpressions(expressionStatements)
-        }else if(token.kind==TinaToken.IF){
-
         }
-        else if(token.kind==TinaToken.RETURN){
-          expressionStatements=expressionStatements:+returnExp(lexer)
+        else if (token.kind == TinaToken.RETURN) {
+          expressionStatements = expressionStatements :+ returnExp(lexer)
           return nextExpressions(expressionStatements)
         }
       }

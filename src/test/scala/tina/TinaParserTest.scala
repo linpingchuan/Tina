@@ -9,16 +9,17 @@ class TinaParserTest {
   @Test
   def testRun(): Unit ={
     val lexer=TinaLexer((" love test(a, b){ " +
-      "c=a+1+b+23+b " +
+      "c=a+1+b+23*b " +
       " run(a,2,3,4) " +
-      " if(a>1){ run(1) } " +
+//      " if(a>1){ run(1) } " +
       " return c+23+12 " +
       "}").toCharArray)
     val compiler=TinaParser(lexer)
     compiler.run()
-    println(compiler.globalVariable)
-    println(compiler.functionDeclarations)
+//    println(compiler.globalVariable)
+//    println(new GsonBuilder().setPrettyPrinting().create().toJson(compiler.functionDeclarations(0)))
 //    println(compiler.functionDeclarations(0).body)
-    compiler.functionDeclarations(0).body.body.foreach(x=>println(x))
+    compiler.functionDeclarations.head.body.body.foreach(x=>println(x))
   }
 }
+
