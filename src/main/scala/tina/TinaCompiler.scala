@@ -297,6 +297,10 @@ case class TinaLexer(src: Array[Char]) {
           TinaToken(name, TinaToken.ADD, line, lineIndex)
         else if (state.state == "*")
           TinaToken(name, TinaToken.MUL, line, lineIndex)
+        else if (state.state == "/")
+          TinaToken(name, TinaToken.DIV, line, lineIndex)
+        else if (state.state == "-")
+          TinaToken(name, TinaToken.SUB, line, lineIndex)
         else
           throw MisMatchTokenException("expecting special letter but not found")
       }
@@ -317,7 +321,7 @@ case class TinaLexer(src: Array[Char]) {
     if (index < src.length) {
       val char = src(index)
       char match {
-        case skipToken if char == '\t' || char == ' ' || char == '\r' || char == '/' =>
+        case skipToken if char == '\t' || char == ' ' || char == '\r' ||(char == '/' && (index + 1) < src.length && src(index + 1)=='*')=>
           skip()
           val flag = isInfer
           isInfer = false
@@ -763,63 +767,54 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
     * @return
     */
   def binaryExp(lexer: TinaLexer): Any = {
-    var stack: List[Any] = List[Any]()
-
+    // 运算符栈
+    var opstack: List[TinaToken] = List[TinaToken]()
+    // 操作数栈
+    var astStack:List[Any] =List[Any]()
+    // 返回结果
+    var binaryExpression:BinaryExpression=null
     def binary(): Unit = {
-      val varToken = lexer.nextToken()
-      val leftIdentifier = stack.head
-      stack = stack.drop(1)
-      factor()
-      val rightIdentifier = stack.head
-      stack = stack.drop(1)
-      val binaryExpression = BinaryExpression(TinaType.typeNames(TinaType.BINARY_EXPRESSION), varToken.name.asInstanceOf[String], leftIdentifier, rightIdentifier)
-      stack = stack :+ binaryExpression
+      val varToken = opstack.head
+      opstack=opstack.drop(1)
+      val leftIdentifier = astStack.head
+      astStack = astStack.drop(1)
+      val rightIdentifier = astStack.head
+      astStack = astStack.drop(1)
+      binaryExpression = BinaryExpression(TinaType.typeNames(TinaType.BINARY_EXPRESSION), varToken.name.asInstanceOf[String], leftIdentifier, rightIdentifier)
+      astStack = astStack :+ binaryExpression
     }
 
-    def expr(): Unit = {
-      term()
+    def run(): Unit ={
       lexer.reset()
       lexer.syn(1)
-      if (lexer.buffer.nonEmpty&&
-        lexer.buffer.head.kind == TinaToken.ADD ||
-        lexer.buffer.head.kind == TinaToken.SUB) {
+      if(lexer.buffer.head.kind==TinaToken.LEFT_PARENT)
+        opstack=opstack:+lexer.nextToken()
+      else if(lexer.buffer.head.kind==TinaToken.RIGHT_PARENT){
         binary()
+        opstack=opstack.drop(1)
       }
-    }
-
-    def term(): Unit = {
-      factor()
-      lexer.reset()
-      lexer.syn(1)
-      if (lexer.buffer.nonEmpty&&
-        lexer.buffer.head.kind == TinaToken.MUL ||
-        lexer.buffer.head.kind == TinaToken.DIV) {
+      else if(lexer.buffer.head.kind==TinaToken.MUL||lexer.buffer.head.kind==TinaToken.DIV){
+        val opToken=lexer.nextToken()
+        opstack=opstack:+opToken
+        run()
         binary()
+      }else if(lexer.buffer.head.kind==TinaToken.VAR){
+        val token=lexer.nextToken()
+        val identifier=Identifier(TinaType.typeNames(TinaType.IDENTIFIER),token.name.asInstanceOf[String])
+        astStack=astStack:+identifier
+        run()
+      }else if(lexer.buffer.head.kind==TinaToken.INT){
+        val token=lexer.nextToken()
+        val literal=Literal(TinaType.typeNames(TinaType.LITERAL),token.name.asInstanceOf[Int],String.valueOf(token.name.asInstanceOf[Int]))
+        astStack=astStack:+literal
+        run()
+      }else if(lexer.buffer.head.kind==TinaToken.ADD||lexer.buffer.head.kind==TinaToken.SUB){
+        val opToken=lexer.nextToken()
+        opstack=opstack:+opToken
       }
     }
-
-    def factor(): Unit = {
-      lexer.reset()
-      lexer.syn(1)
-      if(lexer.buffer.nonEmpty){
-        if (lexer.buffer.head.kind == TinaToken.LEFT_PARENT) {
-          lexer.nextToken()
-          expr()
-        } else if (lexer.buffer.head.kind == TinaToken.VAR) {
-          val varToken = lexer.nextToken()
-          val identifier = Identifier(TinaType.typeNames(TinaType.IDENTIFIER), varToken.name.asInstanceOf[String])
-          stack = stack :+ identifier
-        } else if (lexer.buffer.head.kind == TinaToken.INT) {
-          val varToken = lexer.nextToken()
-          val left = Literal(TinaType.typeNames(TinaType.LITERAL), varToken.name.asInstanceOf[Int], String.valueOf(varToken.name.asInstanceOf[Int]))
-          stack = stack :+ left
-        }
-      }
-
-    }
-
-    expr()
-    stack.head
+    run()
+    astStack.head
   }
 
   /**
