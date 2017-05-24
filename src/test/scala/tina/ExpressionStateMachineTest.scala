@@ -8,7 +8,7 @@ import org.junit.Test
 class ExpressionStateMachineTest {
   @Test
   def testBinaryExp(): Unit ={
-    val lexer=TinaLexer("23*b/f".toCharArray)
+    val lexer=TinaLexer("23*(b/f)".toCharArray)
     val state=ExpressionStateMachine(lexer)
 
     println(state.binaryExp(lexer).asInstanceOf[BinaryExpression])
