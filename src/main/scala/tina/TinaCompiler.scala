@@ -774,57 +774,87 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
     var opstack: List[TinaToken] = List[TinaToken]()
     // 操作数栈
     var astStack: List[Any] = List[Any]()
-    // 返回结果
-    var binaryExpression: BinaryExpression = null
 
-    def buildBinary(): Unit = {
-      if (astStack.length > 1) {
-        val right = astStack.head
-        astStack = astStack.drop(1)
-        val left = astStack.head
-        astStack = astStack.drop(1)
-        val operator = opstack.head
-        opstack = opstack.drop(1)
-        val binary = BinaryExpression(TinaType.BINARY_EXPRESSION, TinaType.typeNames(TinaType.BINARY_EXPRESSION), operator.name.asInstanceOf[String], left, right)
+    def build(fn:()=>Boolean): Unit ={
+      if(fn()){
+        val opToken=opstack.head
+        opstack=opstack.drop(1)
+        val right=astStack.head
+        astStack=astStack.drop(1)
+        val left=astStack.head
+        astStack=astStack.drop(1)
+        val binary=BinaryExpression(TinaType.BINARY_EXPRESSION,TinaType.typeNames(TinaType.BINARY_EXPRESSION),opToken.name.asInstanceOf[String],left,right)
         astStack=binary+:astStack
+        build(fn)
       }
     }
 
-    // 5-1/2*3+4
-    // ast 5 (1/*3) 4
-    // op - +
-    def run(lexer: TinaLexer): Unit = {
+
+
+    def buildBinary(token: TinaToken): Unit = {
+      if(!opstack.forall(_ == null)&&priority(opstack.head)>=priority(token)){
+        build(() => !opstack.forall(_ == null))
+        buildBinary(token)
+      }
+    }
+
+    def priority(token:TinaToken):Int={
+      if(token.kind==TinaToken.LEFT_PARENT)
+        return 0
+      else if(token.kind==TinaToken.ADD||token.kind==TinaToken.SUB)
+        return 1
+      else if(token.kind==TinaToken.DIV||token.kind==TinaToken.MUL)
+        return 2
+      else if(token.kind==TinaToken.RIGHT_PARENT)
+        return 3
+      -1
+    }
+
+
+
+    def run(): Unit ={
       lexer.reset()
       lexer.syn(1)
-      if (!lexer.buffer.forall(_ == null)) {
-        if (lexer.buffer.head.kind == TinaToken.LEFT_PARENT) {
+      if(!lexer.buffer.forall(_ == null)){
+        val buf=lexer.buffer.head
+        if (buf.kind == TinaToken.LEFT_PARENT) {
           val token = lexer.nextToken()
-          opstack = opstack :+ token
-        } else if (lexer.buffer.head.kind == TinaToken.RIGHT_PARENT) {
-          lexer.nextToken()
-          buildBinary()
-        } else if (lexer.buffer.head.kind == TinaToken.ADD || lexer.buffer.head.kind == TinaToken.SUB) {
-          val token = lexer.nextToken()
-          opstack = opstack :+ token
-        } else if (lexer.buffer.head.kind == TinaToken.VAR) {
+          opstack =  token+:opstack
+        }  else if (buf.kind == TinaToken.VAR) {
           val token = lexer.nextToken()
           val identifier = Identifier(TinaType.IDENTIFIER, TinaType.typeNames(TinaType.IDENTIFIER), token.name.asInstanceOf[String])
-          astStack = identifier+: astStack
-        } else if (lexer.buffer.head.kind == TinaToken.INT) {
+          astStack = identifier +: astStack
+        } else if (buf.kind == TinaToken.INT) {
           val token = lexer.nextToken()
-          val literal = Literal(TinaType.LITERAL, TinaType.typeNames(TinaType.LITERAL), token.name.asInstanceOf[Int], String.valueOf(token.name.asInstanceOf[Int]))
-          astStack = literal+:astStack
-        } else if (lexer.buffer.head.kind == TinaToken.DIV||lexer.buffer.head.kind==TinaToken.MUL) {
-          val operator = lexer.nextToken()
-          opstack=operator+:opstack
-          run(lexer)
-          buildBinary()
+          val literal = Literal(TinaType.LITERAL, TinaType.typeNames(TinaType.LITERAL), token.name,
+            token.name.toString)
+          astStack = literal +: astStack
+        } else if (buf.kind == TinaToken.RIGHT_PARENT) {
+          val token=lexer.nextToken()
+          build(()=> !opstack.forall(_ == null)&&opstack.head.kind!=TinaToken.LEFT_PARENT)
+          opstack=opstack.drop(1)
+        } else if (buf.kind == TinaToken.ADD || buf.kind == TinaToken.SUB||buf.kind==TinaToken.MUL||buf.kind==TinaToken.DIV) {
+          if(opstack.isEmpty){
+            val token=lexer.nextToken()
+            opstack = token+:opstack
+          }else if(!opstack.forall(_ == null)){
+            val nowToken=lexer.nextToken()
+            val stackTop=opstack.head
+            if(priority(nowToken)>priority(stackTop)){
+              opstack=nowToken+:opstack
+            }else{
+              buildBinary(nowToken)
+              opstack=nowToken+:opstack
+            }
+          }
         }
-        run(lexer)
+        run()
       }
     }
 
-    run(lexer)
+    run()
+    build(() => !opstack.forall(_ ==null))
+
     astStack.head
   }
 
@@ -877,7 +907,7 @@ case class ExpressionStateMachine(lexer: TinaLexer) {
         return initArgus(lexer, arguments :+ identifier, comma.drop(1))
       } else if (lexer.buffer(0).kind == TinaToken.INT) {
         val token = lexer.nextToken()
-        val literal = Literal(TinaType.LITERAL,TinaType.typeNames(TinaType.LITERAL), token.name.asInstanceOf[Int], String.valueOf(token.name.asInstanceOf[Int]))
+        val literal = Literal(TinaType.LITERAL, TinaType.typeNames(TinaType.LITERAL), token.name.asInstanceOf[Int], String.valueOf(token.name.asInstanceOf[Int]))
         return initArgus(lexer, arguments :+ literal, comma.drop(1))
       } else if (lexer.buffer(0).kind == TinaToken.RIGHT_PARENT) {
         val token = lexer.nextToken()
